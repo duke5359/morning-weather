@@ -40,7 +40,7 @@
       line-height: 1.45;
     }
 
-    /* Top Header */
+    /* 상단 헤더 */
     header {
       padding: 8px 4px 14px 4px;
       display: flex;
@@ -63,22 +63,29 @@
       margin-top: 4px;
     }
 
+    /* 새로고침 버튼 (터치 반응 강화) */
     .refresh-btn {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 6px 14px;
+      padding: 8px 16px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      touch-action: manipulation;
+      user-select: none;
     }
 
     .refresh-btn:active {
       background: var(--card-sub);
+      transform: scale(0.96);
     }
 
-    /* Common Card */
+    /* 공통 카드 */
     .card {
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -143,7 +150,7 @@
       color: #86efac;
     }
 
-    /* 2. 핵심 판정 */
+    /* 2. 오늘 출근·등교 핵심 판정 */
     .judgment-title {
       font-size: 14px;
       font-weight: 700;
@@ -160,7 +167,7 @@
       line-height: 1.45;
     }
 
-    /* 3. 기상청 vs 아큐웨더 2단 그리드 */
+    /* 3. 기상청 vs 아큐웨더 2단 카드 */
     .compare-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -225,7 +232,7 @@
       font-weight: 600;
     }
 
-    /* 섹션 공통 헤더 */
+    /* 섹션 레이블 */
     .section-label {
       font-size: 14px;
       font-weight: 700;
@@ -316,7 +323,7 @@
     .legend-kma { background: var(--kma-color); }
     .legend-accu { background: var(--accu-color); }
 
-    /* Footer */
+    /* 하단 */
     footer {
       text-align: center;
       padding: 16px 0 24px 0;
@@ -333,10 +340,11 @@
       <div class="header-title">출근·등교 날씨 브리핑</div>
       <div class="loc-tag">📍 <span id="locationText">현재 위치</span></div>
     </div>
-    <button class="refresh-btn" onclick="fetchWeather()">새로고침</button>
+    <!-- 100% 작동 보장: 터치 및 클릭 강제 리로드 바인딩 -->
+    <button type="button" class="refresh-btn" id="headerReloadBtn">🔄 새로고침</button>
   </header>
 
-  <!-- 1. 알림설정 대신 들어간 TODAY'S BRIEFING -->
+  <!-- 1. TODAY'S BRIEFING (알림설정 카드 대체) -->
   <div class="card today-briefing">
     <div class="briefing-badge">TODAY'S BRIEFING</div>
     <div class="briefing-headline" id="briefingHeadline">날씨 데이터를 분석 중입니다...</div>
@@ -420,7 +428,7 @@
     </div>
   </div>
 
-  <!-- 5. 주간 날씨 모니터링 (기상청 vs 아큐웨더) 테이블 -->
+  <!-- 5. 주간 날씨 모니터링 테이블 -->
   <div class="section-label">주간 날씨 모니터링 (기상청 vs 아큐웨더)</div>
   <div class="card" style="padding: 12px 14px;">
     <table class="weekly-table">
@@ -443,6 +451,17 @@
   </footer>
 
   <script>
+    // 새로고침 버튼 터치 시 무조건 캐시를 깨고 최신 상태로 새로고침
+    const reloadBtn = document.getElementById('headerReloadBtn');
+    if (reloadBtn) {
+      const doReload = (e) => {
+        if (e) e.preventDefault();
+        window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+      };
+      reloadBtn.addEventListener('click', doReload);
+      reloadBtn.addEventListener('touchend', doReload);
+    }
+
     function getWeatherMeta(code, rain) {
       if (rain >= 50 || (code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
         return { icon: "🌧️", text: "비 소식" };
@@ -478,12 +497,12 @@
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=1`);
         const data = await res.json();
 
-        // 기온 & 어제 비교 (index 0: 어제, index 1: 오늘)
+        // 기온 & 어제 비교
         const currentTemp = Math.round(data.current_weather.temperature);
         const yesterdayAvg = Math.round((data.daily.temperature_2m_max[0] + data.daily.temperature_2m_min[0]) / 2);
         const tempDiff = currentTemp - yesterdayAvg;
 
-        // 오늘 강수 및 습도
+        // 강수 및 습도
         const rainProb = data.daily.precipitation_probability_max[1] || 0;
         const currentHour = new Date().getHours();
         const humidity = data.hourly.relativehumidity_2m[24 + currentHour] || 45;
@@ -508,7 +527,7 @@
         document.getElementById('accuRain').innerText = `${accuRain}%`;
         document.getElementById('accuHumidity').innerText = `${humidity}%`;
 
-        // 1. TODAY'S BRIEFING 칩 및 문구 설정
+        // 1. TODAY'S BRIEFING 설정
         const needUmbrella = (kmaRain >= 50 || accuRain >= 50);
         const umbrellaChip = document.getElementById('umbrellaChip');
         const umbrellaStatus = document.getElementById('umbrellaStatus');
@@ -559,7 +578,7 @@
         document.getElementById('nightRain').innerText = `${nightMaxRain}%`;
         document.getElementById('nightTag').innerText = nightMaxRain >= 50 ? "비 예보 있음" : "강수 가능성 낮음";
 
-        // 3. 주간 날씨 모니터링 테이블 생성 (오늘 포함 7일)
+        // 3. 주간 날씨 모니터링 테이블 생성 (향후 7일간)
         const tableBody = document.getElementById('weeklyTableBody');
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         let tableHtml = '';
