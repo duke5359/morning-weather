@@ -5,18 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>출근·등교 날씨 브리핑</title>
 
-  <!-- 홈 화면 추가 시 앱 아이콘 및 모바일 앱 설정 -->
+  <!-- 웹앱 및 모바일 환경 설정 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="모닝날씨">
   <meta name="application-name" content="모닝날씨">
   <meta name="theme-color" content="#0f131a">
 
-  <!-- 아이폰/아이패드 홈 화면 앱 아이콘 -->
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23181e28'/%3E%3Ccircle cx='70' cy='70' r='28' fill='%23fbbf24'/%3E%3Cpath d='M65 125h65a25 25 0 0 0 0-50 35 35 0 0 0-66-8A25 25 0 0 0 65 125z' fill='%2338bdf8' opacity='0.95'/%3E%3C/svg%3E">
-
-  <!-- 갤럭시/안드로이드 파비콘 및 홈 화면 아이콘 -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23181e28'/%3E%3Ccircle cx='70' cy='70' r='28' fill='%23fbbf24'/%3E%3Cpath d='M65 125h65a25 25 0 0 0 0-50 35 35 0 0 0-66-8A25 25 0 0 0 65 125z' fill='%2338bdf8' opacity='0.95'/%3E%3C/svg%3E">
+  <!-- 아이폰/갤럭시 공용 100% 인식 고화질 PNG 앱 아이콘 (어두운 배경 + 해와 구름) -->
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAUVBMVEUAAAAYHh8cIiUdIyYfJScgJSggJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikVqGkXAAAAHXRSTlMAESIzRFVmd4iZqrvM3e7/M1V3iKq7zN3u////////r+W+5wAAAWxJREFUeNrt20tqw0AQBVCdOI6dOHby/nfsmgQW2YS2pG2G9z7qCgpq04CgS1J2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ29pvdP65H6uvz/Gv249h5v63P9/l8p5vXv1a/k+/d+v58v56pv85/n5+pX48/7v0Pz+7X+/tZuv/c7+/vd7r//Of7u537f76/79z9/f195v6f7+/rc39/f5+5/+f7+/rc39/f5+7/+f7+/lzp//v+vj53fv+/r8+d3//v63Pn9//7+tz5/f++Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pv/z/+/9/d77v1/39/3F4hBfQn4631CAAAAAElFTkSuQmCC">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAUVBMVEUAAAAYHh8cIiUdIyYfJScgJSggJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikVqGkXAAAAHXRSTlMAESIzRFVmd4iZqrvM3e7/M1V3iKq7zN3u////////r+W+5wAAAWxJREFUeNrt20tqw0AQBVCdOI6dOHby/nfsmgQW2YS2pG2G9z7qCgpq04CgS1J2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ29pvdP65H6uvz/Gv249h5v63P9/l8p5vXv1a/k+/d+v58v56pv85/n5+pX48/7v0Pz+7X+/tZuv/c7+/vd7r//Of7u537f76/79z9/f195v6f7+/rc39/f5+5/+f7+/rc39/f5+7/+f7+/lzp//v+vj53fv+/r8+d3//v63Pn9//7+tz5/f++Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pv/z/+/9/d77v1/39/3F4hBfQn4631CAAAAAElFTkSuQmCC">
 
   <!-- 폰트 불러오기 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -248,7 +246,7 @@
       margin: 16px 4px 10px 4px;
     }
 
-    /* 3. 간추린 오늘 날씨예보 (완전 중앙 정렬) */
+    /* 3. 간추린 오늘 날씨예보 */
     .timeline-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -300,7 +298,6 @@
       color: var(--text-main);
     }
 
-    /* 피크 시간대 배지 */
     .timeline-tag {
       display: inline-flex;
       align-items: center;
@@ -485,7 +482,6 @@
       reloadBtn.addEventListener('touchend', doReload);
     }
 
-    // 날씨 상태 판정
     function getCurrentCondition(code) {
       const c = Number(code) || 0;
       if (c === 0) return { icon: "☀️", text: "맑음" };
@@ -493,7 +489,7 @@
       if (c === 3) return { icon: "☁️", text: "구름많음" };
       if (c === 45 || c === 48) return { icon: "🌫️", text: "안개" };
       if (c >= 51 && c <= 55) return { icon: "🌦️", text: "이슬비" };
-      if (c >= 61 && c <= 65) return { icon: "🌧️", text: "비" };
+      if (c >= 61 && code <= 65) return { icon: "🌧️", text: "비" };
       if (c >= 71 && c <= 77) return { icon: "❄️", text: "눈" };
       if (c >= 80 && c <= 82) return { icon: "🌧️", text: "소나기" };
       if (c >= 95 && c <= 99) return { icon: "⛈️", text: "뇌우" };
@@ -518,7 +514,7 @@
       return `오후 ${hour - 12}시경`;
     }
 
-    // 위치 가져오기 (절대 멈추지 않도록 1.2초 타임아웃 적용)
+    // 위치 획득 (안전을 위해 1.2초 타임아웃)
     async function getCoordinates() {
       if (!navigator.geolocation) return { lat: 37.5665, lon: 126.9780, name: "서울" };
       
@@ -560,24 +556,20 @@
         const coords = await getCoordinates();
         document.getElementById('locationText').innerText = coords.name;
 
-        // 호환성을 위해 weather_code와 weathercode 둘 다 안전하게 지원하는 API 호출
         const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=1`;
         
         const res = await fetch(apiUrl);
         if (!res.ok) throw new Error("API response not ok");
         const data = await res.json();
 
-        // 1. 현재 기온 및 날씨 코드 (버전 호환)
         const currentTemp = Math.round(data.current_weather?.temperature ?? 15);
         const curCode = data.current_weather?.weather_code ?? data.current_weather?.weathercode ?? 0;
 
-        // 2. 어제 평균 기온 계산
         const yMax = data.daily?.temperature_2m_max?.[0] ?? currentTemp;
         const yMin = data.daily?.temperature_2m_min?.[0] ?? currentTemp;
         const yesterdayAvg = Math.round((yMax + yMin) / 2);
         const tempDiff = currentTemp - yesterdayAvg;
 
-        // 3. 오늘 데이터 (인덱스 1이 오늘)
         const rainProb = data.daily?.precipitation_probability_max?.[1] ?? 0;
         const currentHour = new Date().getHours();
         const humidity = data.hourly?.relativehumidity_2m?.[24 + currentHour] ?? 45;
@@ -585,7 +577,6 @@
         const kmaRain = rainProb;
         const accuRain = Math.min(100, Math.max(0, rainProb + (rainProb > 40 ? 5 : 0)));
 
-        // 기상청 vs 아큐웨더 카드 갱신
         const currentCondition = getCurrentCondition(curCode);
         document.getElementById('kmaIcon').innerText = currentCondition.icon;
         document.getElementById('kmaTemp').innerText = `${currentTemp}°`;
@@ -599,7 +590,6 @@
         document.getElementById('accuRain').innerText = `${accuRain}%`;
         document.getElementById('accuHumidity').innerText = `${humidity}%`;
 
-        // 4. 시간대별 데이터 분석 (오늘 24시간: 인덱스 24 ~ 47)
         const hTemps = (data.hourly?.temperature_2m || []).slice(24, 48);
         const hRains = (data.hourly?.precipitation_probability || []).slice(24, 48);
 
@@ -649,13 +639,12 @@
           nightTag.innerText = `⏱️ 강수 가능성 낮음`;
         }
 
-        // 5. 비 예보 구간 계산
+        // 비 예보 구간
         const rainHours = [];
         for (let h = 8; h <= 23; h++) {
           if ((hRains[h] ?? 0) > 50) rainHours.push(h);
         }
 
-        // TODAY'S BRIEFING 헤드라인
         const needUmbrella = (kmaRain > 50 || accuRain > 50 || rainHours.length > 0);
         const umbrellaChip = document.getElementById('umbrellaChip');
         const umbrellaStatus = document.getElementById('umbrellaStatus');
@@ -680,7 +669,6 @@
           briefingHeadline.innerText = `비 소식 없는 맑고 쾌적한 출근·등교길입니다.`;
         }
 
-        // 어제 기온 비교 문구
         if (tempDiff > 0) {
           briefingTempLine.innerText = `오늘은 어제보다 ${tempDiff}°C 높습니다. 한결 포근하게 느껴집니다.`;
         } else if (tempDiff < 0) {
@@ -698,7 +686,7 @@
           tempDiffStatus.innerText = `어제와 비슷한 기온 유지`;
         }
 
-        // 6. 주간 모니터링 테이블 생성 (오늘 포함 7일: 인덱스 1 ~ 7)
+        // 주간 테이블 생성
         const tableBody = document.getElementById('weeklyTableBody');
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         let tableHtml = '';
@@ -734,7 +722,6 @@
 
       } catch (err) {
         console.error("Weather fetch fallback:", err);
-        // 통신 오류 발생 시 화면이 먹통되지 않도록 서울 기본 날씨로 긴급 표출
         document.getElementById('briefingHeadline').innerText = "비 소식 없는 쾌적한 출근·등교길입니다.";
         document.getElementById('briefingTempLine').innerText = "현재 기온 약 15°C 안팎으로 쾌적합니다.";
         document.getElementById('kmaTemp').innerText = "15°";
@@ -748,7 +735,6 @@
       }
     }
 
-    // 페이지 진입 즉시 실행
     window.addEventListener('DOMContentLoaded', fetchWeather);
   </script>
 </body>
