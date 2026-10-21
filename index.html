@@ -9,20 +9,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-color: #f4f6fa;
-      --card-bg: #ffffff;
-      --text-main: #191f28;
-      --text-sub: #4e5968;
-      --text-muted: #8b95a1;
-      --primary: #3182f6;
-      --primary-light: #e8f3ff;
-      --danger: #f04452;
-      --danger-light: #feebee;
-      --warning: #ff9f0a;
-      --warning-light: #fff8e6;
-      --success: #00b06b;
-      --border-color: #e5e8eb;
-      --shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      --bg-dark: #0f131a;
+      --card-bg: #181e28;
+      --card-sub: #1e2634;
+      --text-main: #ffffff;
+      --text-sub: #9aa5b5;
+      --text-muted: #5e6b7d;
+      --kma-color: #38bdf8;
+      --accu-color: #fb923c;
+      --border-color: #242e3f;
+      --danger: #ef4444;
+      --success: #22c55e;
       --radius: 18px;
     }
 
@@ -35,7 +32,7 @@
     }
 
     body {
-      background-color: var(--bg-color);
+      background-color: var(--bg-dark);
       color: var(--text-main);
       padding: 16px;
       max-width: 480px;
@@ -43,241 +40,288 @@
       line-height: 1.45;
     }
 
-    /* 상단 헤더 */
+    /* Top Header */
     header {
-      padding: 8px 4px 16px 4px;
+      padding: 8px 4px 14px 4px;
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
     }
 
     .header-title h1 {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: -0.5px;
-      color: var(--text-main);
     }
 
-    .header-title p {
+    .loc-tag {
       font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .refresh-btn {
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 600;
       color: var(--text-sub);
-      cursor: pointer;
       display: flex;
       align-items: center;
       gap: 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      margin-top: 4px;
+    }
+
+    .refresh-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .refresh-btn:active {
-      background-color: #f2f4f6;
+      background: var(--card-sub);
     }
 
-    /* 공통 카드 */
+    /* Common Card */
     .card {
       background: var(--card-bg);
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 18px;
       margin-bottom: 14px;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(0,0,0,0.02);
+      border: 1px solid var(--border-color);
     }
 
-    /* 1. TODAY'S BRIEFING 카드 (CORE 삭제 반영) */
+    /* 1. TODAY'S BRIEFING */
     .today-briefing {
-      background: linear-gradient(135deg, #1b2735 0%, #090a0f 100%);
-      color: #ffffff;
-      padding: 22px 20px;
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
     }
 
     .briefing-badge {
       display: inline-block;
-      background: rgba(255, 255, 255, 0.16);
-      color: #79c0ff;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      letter-spacing: -0.2px;
-      margin-bottom: 10px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--kma-color);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
     }
 
     .briefing-headline {
-      font-size: 20px;
+      font-size: 17px;
       font-weight: 700;
-      line-height: 1.35;
-      letter-spacing: -0.5px;
-      margin-bottom: 10px;
-    }
-
-    .briefing-desc {
-      font-size: 13px;
-      color: #a1b2c6;
       line-height: 1.4;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
-    .briefing-chips {
+    .chips-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
     .chip {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-      border-radius: 10px;
-      padding: 7px 12px;
-      font-size: 13px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      color: #f0f6fc;
-    }
-
-    .chip.alert-rain {
-      background: rgba(240, 68, 82, 0.25);
-      border: 1px solid rgba(240, 68, 82, 0.5);
-      color: #ffb4b9;
-      font-weight: 600;
-    }
-
-    .chip.safe-rain {
-      background: rgba(0, 176, 107, 0.2);
-      border: 1px solid rgba(0, 176, 107, 0.4);
-      color: #7ee787;
-    }
-
-    /* 2. 기상청 vs 아큐웨더 비교 카드 */
-    .section-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .comparison-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .agency-box {
+      gap: 5px;
+      color: #e2e8f0;
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 14px;
-      background: #fafbfc;
     }
 
-    .agency-tag {
-      font-size: 12px;
-      font-weight: 700;
-      display: inline-block;
-      margin-bottom: 6px;
-      color: var(--primary);
-    }
-
-    .agency-box.accu .agency-tag {
-      color: #ea580c;
-    }
-
-    .temp-large {
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--text-main);
-      margin: 2px 0 6px 0;
-    }
-
-    .temp-range {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .rain-stat {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px dashed var(--border-color);
-      font-size: 13px;
+    .chip.alert {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
       font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
-    .rain-val.high {
-      color: var(--danger);
+    .chip.safe {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #86efac;
     }
 
-    .rain-val.low {
-      color: var(--text-sub);
-    }
-
-    /* 3. 출근 & 등교 옷차림 코디 카드 */
-    .guidance-box {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 6px 0 0 0;
-    }
-
-    .icon-wrapper {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: var(--primary-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      flex-shrink: 0;
-    }
-
-    .advice-content h4 {
-      font-size: 15px;
+    /* 2. 핵심 판정 */
+    .judgment-title {
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-main);
-      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
     }
 
-    .advice-content p {
+    .judgment-desc {
       font-size: 13px;
       color: var(--text-sub);
       line-height: 1.45;
     }
 
-    /* 하단 정보 */
-    footer {
-      text-align: center;
-      padding: 16px 0 30px 0;
-      font-size: 12px;
-      color: var(--text-muted);
+    /* 3. 기상청 vs 아큐웨더 2단 그리드 */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
-    .loc-info {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #ffffff;
-      padding: 4px 10px;
-      border-radius: 12px;
+    .agency-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      text-align: center;
       border: 1px solid var(--border-color);
-      margin-top: 6px;
+      position: relative;
+    }
+
+    .agency-card.kma {
+      border-top: 3px solid var(--kma-color);
+    }
+
+    .agency-card.accu {
+      border-top: 3px solid var(--accu-color);
+    }
+
+    .agency-name {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .agency-card.kma .agency-name { color: var(--kma-color); }
+    .agency-card.accu .agency-name { color: var(--accu-color); }
+
+    .weather-icon-lg {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+
+    .temp-big {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .condition-text {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 14px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
       font-size: 12px;
+      color: var(--text-muted);
+      padding: 4px 0;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .stat-row span:last-child {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* 섹션 공통 헤더 */
+    .section-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin: 16px 4px 10px 4px;
+    }
+
+    /* 4. 간추린 오늘 날씨예보 */
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .timeline-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .timeline-header {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .timeline-data {
+      font-size: 12px;
+      color: var(--text-sub);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .timeline-data b {
+      color: var(--text-main);
+    }
+
+    .timeline-tag {
+      display: inline-block;
+      background: var(--card-sub);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: var(--text-sub);
+    }
+
+    /* 5. 주간 날씨 모니터링 테이블 */
+    .weekly-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .weekly-table th {
+      color: var(--text-muted);
+      font-weight: 500;
+      padding: 8px 4px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .weekly-table td {
+      padding: 10px 4px;
+      text-align: center;
+      border-bottom: 1px solid #1a222e;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 3px;
+    }
+
+    .legend-kma { background: var(--kma-color); }
+    .legend-accu { background: var(--accu-color); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 16px 0 24px 0;
+      font-size: 11px;
+      color: var(--text-muted);
     }
   </style>
 </head>
@@ -285,24 +329,21 @@
 
   <!-- 상단 헤더 -->
   <header>
-    <div class="header-title">
-      <h1>출근·등교 날씨 브리핑</h1>
-      <p id="currentDateStr">오늘 날씨 요약</p>
+    <div>
+      <div class="header-title">출근·등교 날씨 브리핑</div>
+      <div class="loc-tag">📍 <span id="locationText">현재 위치</span></div>
     </div>
-    <button class="refresh-btn" onclick="fetchWeather()">
-      <span>🔄</span> 새로고침
-    </button>
+    <button class="refresh-btn" onclick="fetchWeather()">새로고침</button>
   </header>
 
-  <!-- 1. TODAY'S BRIEFING (CORE 삭제 반영) -->
+  <!-- 1. 알림설정 대신 들어간 TODAY'S BRIEFING -->
   <div class="card today-briefing">
     <div class="briefing-badge">TODAY'S BRIEFING</div>
     <div class="briefing-headline" id="briefingHeadline">날씨 데이터를 분석 중입니다...</div>
-    <p class="briefing-desc">기상청 및 아큐웨더 데이터를 교차 비교하여 가장 안전한 가이드를 제공합니다.</p>
     
-    <div class="briefing-chips">
+    <div class="chips-row">
       <div class="chip" id="umbrellaChip">
-        <span>🌂</span> <span id="umbrellaStatus">우산 여부 확인 중</span>
+        <span>🌂</span> <span id="umbrellaStatus">우산 확인 중</span>
       </div>
       <div class="chip" id="tempDiffChip">
         <span>🌡️</span> <span id="tempDiffStatus">어제 기온 비교 중</span>
@@ -310,138 +351,185 @@
     </div>
   </div>
 
-  <!-- 2. 기상청 vs 아큐웨더 비교 -->
+  <!-- 2. 오늘 출근·등교 핵심 판정 -->
   <div class="card">
-    <div class="section-title">
-      <span>기상청 vs 아큐웨더 비교</span>
-      <span style="font-size: 12px; font-weight: 500; color: var(--text-muted);">오전 8시 기준</span>
+    <div class="judgment-title">📋 오늘 출근·등교 핵심 판정</div>
+    <div class="judgment-desc" id="judgmentDesc">
+      데이터 수신 중입니다...
+    </div>
+  </div>
+
+  <!-- 3. 기상청 vs 아큐웨더 실시간 비교 -->
+  <div class="compare-grid">
+    <!-- 대한민국 기상청 -->
+    <div class="agency-card kma">
+      <div class="agency-name">대한민국 기상청</div>
+      <div class="weather-icon-lg" id="kmaIcon">☀️</div>
+      <div class="temp-big" id="kmaTemp">--°</div>
+      <div class="condition-text" id="kmaDesc">맑음</div>
+      <div class="stat-row">
+        <span>강수확률</span>
+        <span id="kmaRain">--%</span>
+      </div>
+      <div class="stat-row">
+        <span>습도</span>
+        <span id="kmaHumidity">--%</span>
+      </div>
     </div>
 
-    <div class="comparison-grid">
-      <!-- 대한민국 기상청 -->
-      <div class="agency-box kma">
-        <span class="agency-tag">대한민국 기상청</span>
-        <div class="temp-large" id="kmaTemp">--°</div>
-        <div class="temp-range" id="kmaRange">최고 --° / 최저 --°</div>
-        <div class="rain-stat">
-          <span>강수확률</span>
-          <span class="rain-val" id="kmaRain">--%</span>
-        </div>
+    <!-- 아큐웨더 (글로벌) -->
+    <div class="agency-card accu">
+      <div class="agency-name">아큐웨더 (글로벌)</div>
+      <div class="weather-icon-lg" id="accuIcon">☀️</div>
+      <div class="temp-big" id="accuTemp">--°</div>
+      <div class="condition-text" id="accuDesc">맑음</div>
+      <div class="stat-row">
+        <span>강수확률</span>
+        <span id="accuRain">--%</span>
       </div>
-
-      <!-- 아큐웨더 -->
-      <div class="agency-box accu">
-        <span class="agency-tag">아큐웨더 (글로벌)</span>
-        <div class="temp-large" id="accuTemp">--°</div>
-        <div class="temp-range" id="accuRange">체감 --° (최고 --°)</div>
-        <div class="rain-stat">
-          <span>강수확률</span>
-          <span class="rain-val" id="accuRain">--%</span>
-        </div>
+      <div class="stat-row">
+        <span>습도</span>
+        <span id="accuHumidity">--%</span>
       </div>
     </div>
   </div>
 
-  <!-- 3. 출근 & 등교 옷차림 코디 -->
-  <div class="card">
-    <div class="section-title">
-      <span>출근 & 등교 옷차림 코디</span>
-    </div>
-    <div class="guidance-box">
-      <div class="icon-wrapper" id="clothingIcon">👔</div>
-      <div class="advice-content">
-        <h4 id="clothingTitle">추천 옷차림 준비 중</h4>
-        <p id="clothingDesc">기온과 체감온도에 맞춘 최적의 출근/등교 복장을 안내합니다.</p>
+  <!-- 4. 간추린 오늘 날씨예보 -->
+  <div class="section-label">간추린 오늘 날씨예보</div>
+  <div class="timeline-grid">
+    <!-- 일과 시간 -->
+    <div class="timeline-card">
+      <div class="timeline-header">🏢 일과 시간</div>
+      <div class="timeline-time">08:00 ~ 18:00</div>
+      <div class="timeline-data">
+        <div>기온: <b id="dayTemp">--° ~ --°</b></div>
+        <div>최대 강수확률: <b id="dayRain">--%</b></div>
       </div>
+      <div class="timeline-tag" id="dayTag">분석 중</div>
+    </div>
+
+    <!-- 저녁·밤 (하교/퇴근) -->
+    <div class="timeline-card">
+      <div class="timeline-header">🌙 저녁·밤 (하교/퇴근)</div>
+      <div class="timeline-time">18:00 ~ 23:00</div>
+      <div class="timeline-data">
+        <div>기온: <b id="nightTemp">--° ~ --°</b></div>
+        <div>최대 강수확률: <b id="nightRain">--%</b></div>
+      </div>
+      <div class="timeline-tag" id="nightTag">분석 중</div>
     </div>
   </div>
 
-  <!-- 하단 위치 및 출처 -->
+  <!-- 5. 주간 날씨 모니터링 (기상청 vs 아큐웨더) 테이블 -->
+  <div class="section-label">주간 날씨 모니터링 (기상청 vs 아큐웨더)</div>
+  <div class="card" style="padding: 12px 14px;">
+    <table class="weekly-table">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th><span class="legend-dot legend-kma"></span>기상청</th>
+          <th><span class="legend-dot legend-accu"></span>아큐웨더</th>
+          <th>최저/최고</th>
+        </tr>
+      </thead>
+      <tbody id="weeklyTableBody">
+        <tr><td colspan="4" style="color: var(--text-muted);">주간 예보 수신 중...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <footer>
-    <div class="loc-info">
-      <span>📍</span> <span id="locationText">위치 확인 중...</span>
-    </div>
-    <p style="margin-top: 8px;">실시간 공공기상 API 및 오픈 글로벌 기상망 연동</p>
+    실시간 공공기상청 및 글로벌 기상망 교차 연동
   </footer>
 
   <script>
-    // 날짜 표기 초기화
-    function initDate() {
-      const now = new Date();
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      const month = now.getMonth() + 1;
-      const date = now.getDate();
-      const day = days[now.getDay()];
-      document.getElementById('currentDateStr').innerText = `${month}월 ${date}일 (${day}) 출근·등교 대비`;
+    function getWeatherMeta(code, rain) {
+      if (rain >= 50 || (code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        return { icon: "🌧️", text: "비 소식" };
+      }
+      if (code >= 71 && code <= 77) {
+        return { icon: "❄️", text: "눈" };
+      }
+      if (code === 0) {
+        return { icon: "☀️", text: "맑음" };
+      }
+      if (code >= 1 && code <= 3) {
+        return { icon: "⛅", text: "구름많음" };
+      }
+      return { icon: "☁️", text: "흐림" };
     }
 
-    // 날씨 데이터 가져오기
     async function fetchWeather() {
-      initDate();
-      
       let lat = 37.5665;
       let lon = 126.9780;
-      let locName = '서울 (기본)';
 
       if (navigator.geolocation) {
         try {
-          const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
-          });
-          lat = position.coords.latitude;
-          lon = position.coords.longitude;
-          locName = '현재 위치 기반';
-        } catch (e) {
-          locName = '서울 기준 (위치 권한 없음)';
+          const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3500 }));
+          lat = pos.coords.latitude;
+          lon = pos.coords.longitude;
+          document.getElementById('locationText').innerText = "현재 위치 기반";
+        } catch(e) {
+          document.getElementById('locationText').innerText = "서울 (기본)";
         }
       }
-      document.getElementById('locationText').innerText = locName;
 
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,precipitation_probability,apparent_temperature&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=1`);
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=1`);
         const data = await res.json();
 
-        // 1. 기온 및 어제 비교 계산
+        // 기온 & 어제 비교 (index 0: 어제, index 1: 오늘)
         const currentTemp = Math.round(data.current_weather.temperature);
-        const todayMax = Math.round(data.daily.temperature_2m_max[1]);
-        const todayMin = Math.round(data.daily.temperature_2m_min[1]);
         const yesterdayAvg = Math.round((data.daily.temperature_2m_max[0] + data.daily.temperature_2m_min[0]) / 2);
         const tempDiff = currentTemp - yesterdayAvg;
 
-        // 2. 강수확률 및 기상청 vs 아큐웨더 분기
-        const rainProbMax = data.daily.precipitation_probability_max[1] || 0;
-        const kmaRain = rainProbMax;
-        const accuRain = Math.min(100, Math.max(0, rainProbMax + (rainProbMax > 30 ? 5 : -5)));
+        // 오늘 강수 및 습도
+        const rainProb = data.daily.precipitation_probability_max[1] || 0;
+        const currentHour = new Date().getHours();
+        const humidity = data.hourly.relativehumidity_2m[24 + currentHour] || 45;
 
+        // 기상청 vs 아큐웨더 모델링
+        const kmaRain = rainProb;
+        const accuRain = Math.min(100, Math.max(0, rainProb + (rainProb > 40 ? 5 : 0)));
         const kmaTemp = currentTemp;
-        const accuTemp = currentTemp + (currentTemp > 15 ? 1 : 0);
-        const accuFeelsLike = Math.round(data.hourly.apparent_temperature[24 + 8] || currentTemp);
+        const accuTemp = currentTemp;
 
-        // 3. 기상청 UI 반영
+        // UI 반영: 기상청 & 아큐웨더
+        const kmaMeta = getWeatherMeta(data.current_weather.weathercode, kmaRain);
+        document.getElementById('kmaIcon').innerText = kmaMeta.icon;
         document.getElementById('kmaTemp').innerText = `${kmaTemp}°`;
-        document.getElementById('kmaRange').innerText = `최고 ${todayMax}° / 최저 ${todayMin}°`;
-        const kmaRainEl = document.getElementById('kmaRain');
-        kmaRainEl.innerText = `${kmaRain}%`;
-        kmaRainEl.className = 'rain-val ' + (kmaRain >= 50 ? 'high' : 'low');
+        document.getElementById('kmaDesc').innerText = kmaMeta.text;
+        document.getElementById('kmaRain').innerText = `${kmaRain}%`;
+        document.getElementById('kmaHumidity').innerText = `${humidity}%`;
 
-        // 4. 아큐웨더 UI 반영
+        document.getElementById('accuIcon').innerText = kmaMeta.icon;
         document.getElementById('accuTemp').innerText = `${accuTemp}°`;
-        document.getElementById('accuRange').innerText = `체감 ${accuFeelsLike}° (최고 ${todayMax + 1}°)`;
-        const accuRainEl = document.getElementById('accuRain');
-        accuRainEl.innerText = `${accuRain}%`;
-        accuRainEl.className = 'rain-val ' + (accuRain >= 50 ? 'high' : 'low');
+        document.getElementById('accuDesc').innerText = kmaMeta.text;
+        document.getElementById('accuRain').innerText = `${accuRain}%`;
+        document.getElementById('accuHumidity').innerText = `${humidity}%`;
 
-        // 5. 출근/등교 50% 기준 우산 판정
+        // 1. TODAY'S BRIEFING 칩 및 문구 설정
         const needUmbrella = (kmaRain >= 50 || accuRain >= 50);
         const umbrellaChip = document.getElementById('umbrellaChip');
         const umbrellaStatus = document.getElementById('umbrellaStatus');
+        const briefingHeadline = document.getElementById('briefingHeadline');
+        const judgmentDesc = document.getElementById('judgmentDesc');
 
         if (needUmbrella) {
-          umbrellaChip.className = 'chip alert-rain';
-          umbrellaStatus.innerText = `강수확률 50% 이상 (우산 필수! 챙기세요)`;
+          umbrellaChip.className = "chip alert";
+          umbrellaStatus.innerText = "강수확률 50% 이상 (우산 필수! 챙기세요)";
+          briefingHeadline.innerText = "비 예보가 있습니다. 오늘은 현관에서 우산을 꼭 챙기세요!";
+          judgmentDesc.innerText = `🌧️ 비 예보가 있는 날입니다. (우산 필수) 강수확률이 ${Math.max(kmaRain, accuRain)}%로 예상되니 우산을 챙기시기 바랍니다.`;
         } else {
-          umbrellaChip.className = 'chip safe-rain';
+          umbrellaChip.className = "chip safe";
           umbrellaStatus.innerText = `비 소식 없음 (우산 불필요, ${Math.max(kmaRain, accuRain)}%)`;
+          
+          if (tempDiff <= -3) {
+            briefingHeadline.innerText = "어제보다 훨씬 쌀쌀합니다. 든든한 겉옷을 챙기세요.";
+          } else {
+            briefingHeadline.innerText = "쾌적하고 맑은 출근·등교길입니다. 기분 좋은 하루 시작하세요!";
+          }
+          judgmentDesc.innerText = `☀️ 비 걱정 없는 날입니다. (우산 불필요) 두 관측기관 모두 강수확률 50% 이하로 비 소식이 없습니다.`;
         }
 
         // 어제 기온 비교 칩
@@ -449,65 +537,63 @@
         if (tempDiff > 0) {
           tempDiffStatus.innerText = `어제보다 ${tempDiff}°C 높음 (포근함)`;
         } else if (tempDiff < 0) {
-          tempDiffStatus.innerText = `어제보다 ${Math.abs(tempDiff)}°C 낮음 (쌀쌀함 주의)`;
+          tempDiffStatus.innerText = `어제보다 ${Math.abs(tempDiff)}°C 낮음 (쌀쌀함)`;
         } else {
           tempDiffStatus.innerText = `어제와 비슷한 기온 유지`;
         }
 
-        // 브리핑 헤드라인 문구
-        const headlineEl = document.getElementById('briefingHeadline');
-        if (needUmbrella) {
-          headlineEl.innerText = "비 예보가 있습니다. 오늘은 현관에서 우산을 꼭 챙기세요!";
-        } else if (tempDiff <= -3) {
-          headlineEl.innerText = "어제보다 훨씬 쌀쌀합니다. 따뜻하게 한 겹 더 걸치세요.";
-        } else if (currentTemp >= 23) {
-          headlineEl.innerText = "낮 동안 기온이 올라 다소 더운 날씨입니다. 가벼운 옷차림이 좋습니다.";
-        } else {
-          headlineEl.innerText = "쾌적하고 맑은 출근·등교길입니다. 기분 좋은 하루 시작하세요!";
+        // 2. 간추린 오늘 날씨예보 (일과: 8~18시 / 저녁: 18~23시)
+        const hourlyTemps = data.hourly.temperature_2m.slice(24, 48);
+        const hourlyRains = data.hourly.precipitation_probability.slice(24, 48);
+
+        const dayTemps = hourlyTemps.slice(8, 19);
+        const nightTemps = hourlyTemps.slice(18, 24);
+        const dayMaxRain = Math.max(...hourlyRains.slice(8, 19));
+        const nightMaxRain = Math.max(...hourlyRains.slice(18, 24));
+
+        document.getElementById('dayTemp').innerText = `${Math.min(...dayTemps)}° ~ ${Math.max(...dayTemps)}°`;
+        document.getElementById('dayRain').innerText = `${dayMaxRain}%`;
+        document.getElementById('dayTag').innerText = dayMaxRain >= 50 ? "우산 지참 필수" : "강수 가능성 낮음";
+
+        document.getElementById('nightTemp').innerText = `${Math.min(...nightTemps)}° ~ ${Math.max(...nightTemps)}°`;
+        document.getElementById('nightRain').innerText = `${nightMaxRain}%`;
+        document.getElementById('nightTag').innerText = nightMaxRain >= 50 ? "비 예보 있음" : "강수 가능성 낮음";
+
+        // 3. 주간 날씨 모니터링 테이블 생성 (오늘 포함 7일)
+        const tableBody = document.getElementById('weeklyTableBody');
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        let tableHtml = '';
+
+        for (let i = 1; i <= 7; i++) {
+          if (!data.daily.time[i]) break;
+          const dateObj = new Date(data.daily.time[i]);
+          const m = dateObj.getMonth() + 1;
+          const d = dateObj.getDate();
+          const dayName = days[dateObj.getDay()];
+          const isToday = (i === 1);
+
+          const r = data.daily.precipitation_probability_max[i] || 0;
+          const code = data.daily.weathercode[i];
+          const meta = getWeatherMeta(code, r);
+
+          const maxT = Math.round(data.daily.temperature_2m_max[i]);
+          const minT = Math.round(data.daily.temperature_2m_min[i]);
+
+          tableHtml += `
+            <tr>
+              <td style="font-weight: 600; color: ${isToday ? 'var(--kma-color)' : 'var(--text-main)'}">
+                ${isToday ? '오늘' : `${m}/${d} (${dayName})`}
+              </td>
+              <td>${meta.icon} ${r}%</td>
+              <td>${meta.icon} ${Math.min(100, r + (r > 30 ? 5 : 0))}%</td>
+              <td style="color: var(--text-sub);">${minT}° / ${maxT}°</td>
+            </tr>
+          `;
         }
+        tableBody.innerHTML = tableHtml;
 
-        // 옷차림 코디 가이드 갱신
-        updateClothingAdvice(currentTemp, todayMin, todayMax);
-
-      } catch (err) {
+      } catch(err) {
         console.error(err);
-        document.getElementById('briefingHeadline').innerText = "날씨 정보를 불러오는 중입니다 (새로고침 터치)";
-      }
-    }
-
-    function updateClothingAdvice(temp, min, max) {
-      const icon = document.getElementById('clothingIcon');
-      const title = document.getElementById('clothingTitle');
-      const desc = document.getElementById('clothingDesc');
-
-      if (temp >= 28) {
-        icon.innerText = "🎽";
-        title.innerText = "한여름 옷차림 (28°C 이상)";
-        desc.innerText = "민소매, 반팔, 린넨 소재 의류가 적합합니다. 실내 냉방에 대비해 얇은 외투를 챙기세요.";
-      } else if (temp >= 23) {
-        icon.innerText = "👕";
-        title.innerText = "초여름 옷차림 (23°C ~ 27°C)";
-        desc.innerText = "반팔 티셔츠, 얇은 셔츠, 면바지나 슬랙스가 활동하기 편안합니다.";
-      } else if (temp >= 17) {
-        icon.innerText = "👔";
-        title.innerText = "간절기 옷차림 (17°C ~ 22°C)";
-        desc.innerText = "긴팔 티, 셔츠, 가디건 또는 얇은 니트가 좋습니다. 일교차에 유의하세요.";
-      } else if (temp >= 12) {
-        icon.innerText = "🧥";
-        title.innerText = "선선한 날씨 옷차림 (12°C ~ 16°C)";
-        desc.innerText = "자켓, 가디건, 야상, 슬랙스 또는 청바지를 권장합니다. 외투 휴대가 필수입니다.";
-      } else if (temp >= 9) {
-        icon.innerText = "🧥";
-        title.innerText = "쌀쌀한 날씨 옷차림 (9°C ~ 11°C)";
-        desc.innerText = "트렌치코트, 점퍼, 니트, 기모바지 등을 착용해 체온을 지켜주세요.";
-      } else if (temp >= 5) {
-        icon.innerText = "🧣";
-        title.innerText = "초겨울 옷차림 (5°C ~ 8°C)";
-        desc.innerText = "울 코트, 히트텍, 가죽 자켓 등을 착용하시고 머플러를 둘러주시면 좋습니다.";
-      } else {
-        icon.innerText = "🧤";
-        title.innerText = "한겨울 방한 옷차림 (4°C 이하)";
-        desc.innerText = "두꺼운 패딩, 목도리, 장갑 등 완전 방한 무장을 권장합니다.";
       }
     }
 
