@@ -4,9 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>출근·등교 날씨 브리핑</title>
+
+  <!-- 홈 화면 추가 시 앱 아이콘 및 모바일 앱 설정 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="모닝날씨">
+  <meta name="application-name" content="모닝날씨">
+  <meta name="theme-color" content="#0f131a">
+
+  <!-- 아이폰/아이패드 홈 화면 앱 아이콘 (다크 배경 + 해와 구름) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23181e28'/%3E%3Ccircle cx='70' cy='70' r='28' fill='%23fbbf24'/%3E%3Cpath d='M65 125h65a25 25 0 0 0 0-50 35 35 0 0 0-66-8A25 25 0 0 0 65 125z' fill='%2338bdf8' opacity='0.95'/%3E%3C/svg%3E">
+
+  <!-- 갤럭시/안드로이드 파비콘 및 홈 화면 아이콘 -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23181e28'/%3E%3Ccircle cx='70' cy='70' r='28' fill='%23fbbf24'/%3E%3Cpath d='M65 125h65a25 25 0 0 0 0-50 35 35 0 0 0-66-8A25 25 0 0 0 65 125z' fill='%2338bdf8' opacity='0.95'/%3E%3C/svg%3E">
+
+  <!-- 폰트 불러오기 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --bg-dark: #0f131a;
@@ -63,7 +79,7 @@
       margin-top: 4px;
     }
 
-    /* 새로고침 버튼 (터치 시 강제 캐시 우회) */
+    /* 새로고침 버튼 (터치 시 캐시 강제 우회) */
     .refresh-btn {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -357,7 +373,7 @@
     <button type="button" class="refresh-btn" id="headerReloadBtn">🔄 새로고침</button>
   </header>
 
-  <!-- 1. TODAY'S BRIEFING (비 예보 최우선 + 기온/날씨 한 줄) -->
+  <!-- 1. TODAY'S BRIEFING (비 예보 최우선 + 기온 비교 한 줄) -->
   <div class="card today-briefing">
     <div class="briefing-badge">TODAY'S BRIEFING</div>
     <div class="briefing-headline" id="briefingHeadline">날씨 데이터를 분석 중입니다...</div>
@@ -468,7 +484,7 @@
       reloadBtn.addEventListener('touchend', doReload);
     }
 
-    // [수정] 현재 하늘 상태는 비 예보 확률로 덮어쓰지 않고 실제 현재 기상코드로 정확하게 판정
+    // 현재 하늘 상태는 비 예보 확률로 덮어쓰지 않고 실제 현재 기상코드로 정확하게 판정
     function getCurrentCondition(code) {
       if (code === 0) return { icon: "☀️", text: "맑음" };
       if (code === 1 || code === 2) return { icon: "🌤️", text: "대체로 맑음" };
@@ -542,7 +558,7 @@
         const kmaTemp = currentTemp;
         const accuTemp = currentTemp;
 
-        // [핵심] 현재 하늘 상태(햇살/구름)를 실제 기상코드로 정확하게 반영
+        // 현재 하늘 상태(햇살/구름)를 실제 기상코드로 정확하게 반영
         const currentCondition = getCurrentCondition(data.current_weather.weathercode);
         document.getElementById('kmaIcon').innerText = currentCondition.icon;
         document.getElementById('kmaTemp').innerText = `${kmaTemp}°`;
