@@ -116,6 +116,13 @@
       font-size: 17px;
       font-weight: 700;
       line-height: 1.45;
+      margin-bottom: 6px;
+    }
+
+    .briefing-temp-line {
+      font-size: 14px;
+      font-weight: 500;
+      color: #cbd5e1;
       margin-bottom: 12px;
     }
 
@@ -350,10 +357,11 @@
     <button type="button" class="refresh-btn" id="headerReloadBtn">🔄 새로고침</button>
   </header>
 
-  <!-- 1. TODAY'S BRIEFING -->
+  <!-- 1. TODAY'S BRIEFING (비 예보 최우선 + 기온/날씨 한 줄) -->
   <div class="card today-briefing">
     <div class="briefing-badge">TODAY'S BRIEFING</div>
     <div class="briefing-headline" id="briefingHeadline">날씨 데이터를 분석 중입니다...</div>
+    <div class="briefing-temp-line" id="briefingTempLine">기온 변화를 분석하고 있습니다.</div>
     
     <div class="chips-row">
       <div class="chip" id="umbrellaChip">
@@ -365,7 +373,7 @@
     </div>
   </div>
 
-  <!-- 2. 기상청 vs 아큐웨더 실시간 비교 그리드 -->
+  <!-- 2. 기상청 vs 아큐웨더 실시간 비교 그리드 (실시간 현재 하늘 상태 반영) -->
   <div class="compare-grid">
     <!-- 대한민국 기상청 -->
     <div class="agency-card kma">
@@ -460,7 +468,22 @@
       reloadBtn.addEventListener('touchend', doReload);
     }
 
-    function getWeatherMeta(code, rain) {
+    // [수정] 현재 하늘 상태는 비 예보 확률로 덮어쓰지 않고 실제 현재 기상코드로 정확하게 판정
+    function getCurrentCondition(code) {
+      if (code === 0) return { icon: "☀️", text: "맑음" };
+      if (code === 1 || code === 2) return { icon: "🌤️", text: "대체로 맑음" };
+      if (code === 3) return { icon: "☁️", text: "구름많음" };
+      if (code === 45 || code === 48) return { icon: "🌫️", text: "안개" };
+      if (code >= 51 && code <= 55) return { icon: "🌦️", text: "이슬비" };
+      if (code >= 61 && code <= 65) return { icon: "🌧️", text: "비" };
+      if (code >= 71 && code <= 77) return { icon: "❄️", text: "눈" };
+      if (code >= 80 && code <= 82) return { icon: "🌧️", text: "소나기" };
+      if (code >= 95 && code <= 99) return { icon: "⛈️", text: "뇌우" };
+      return { icon: "☀️", text: "맑음" };
+    }
+
+    // 주간 테이블용 예보 매핑
+    function getForecastMeta(code, rain) {
       if (rain > 50 || (code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
         return { icon: "🌧️", text: "비 소식" };
       }
@@ -519,17 +542,17 @@
         const kmaTemp = currentTemp;
         const accuTemp = currentTemp;
 
-        // UI 반영: 기상청 & 아큐웨더
-        const kmaMeta = getWeatherMeta(data.current_weather.weathercode, kmaRain);
-        document.getElementById('kmaIcon').innerText = kmaMeta.icon;
+        // [핵심] 현재 하늘 상태(햇살/구름)를 실제 기상코드로 정확하게 반영
+        const currentCondition = getCurrentCondition(data.current_weather.weathercode);
+        document.getElementById('kmaIcon').innerText = currentCondition.icon;
         document.getElementById('kmaTemp').innerText = `${kmaTemp}°`;
-        document.getElementById('kmaDesc').innerText = kmaMeta.text;
+        document.getElementById('kmaDesc').innerText = currentCondition.text;
         document.getElementById('kmaRain').innerText = `${kmaRain}%`;
         document.getElementById('kmaHumidity').innerText = `${humidity}%`;
 
-        document.getElementById('accuIcon').innerText = kmaMeta.icon;
+        document.getElementById('accuIcon').innerText = currentCondition.icon;
         document.getElementById('accuTemp').innerText = `${accuTemp}°`;
-        document.getElementById('accuDesc').innerText = kmaMeta.text;
+        document.getElementById('accuDesc').innerText = currentCondition.text;
         document.getElementById('accuRain').innerText = `${accuRain}%`;
         document.getElementById('accuHumidity').innerText = `${humidity}%`;
 
@@ -594,12 +617,14 @@
           }
         }
 
-        // 1. TODAY'S BRIEFING 설정 (50% 초과 여부 및 피크 시간대 문구 자동 반영)
+        // 1. TODAY'S BRIEFING 설정 (비 예보 최우선 + 기온/날씨 한 줄 추가)
         const needUmbrella = (kmaRain > 50 || accuRain > 50 || overallMaxRain > 50);
         const umbrellaChip = document.getElementById('umbrellaChip');
         const umbrellaStatus = document.getElementById('umbrellaStatus');
         const briefingHeadline = document.getElementById('briefingHeadline');
+        const briefingTempLine = document.getElementById('briefingTempLine');
 
+        // [우선순위 1] 비 예보 헤드라인
         if (needUmbrella) {
           umbrellaChip.className = "chip alert";
           umbrellaStatus.innerText = "강수확률 50% 초과 (우산 필수! 챙기세요)";
@@ -608,12 +633,16 @@
         } else {
           umbrellaChip.className = "chip safe";
           umbrellaStatus.innerText = `강수확률 50% 이하 (우산 불필요, ${Math.max(kmaRain, accuRain)}%)`;
-          
-          if (tempDiff <= -3) {
-            briefingHeadline.innerText = "어제보다 훨씬 쌀쌀합니다. 든든한 겉옷을 챙기세요.";
-          } else {
-            briefingHeadline.innerText = "쾌적하고 맑은 출근·등교길입니다. 기분 좋은 하루 시작하세요!";
-          }
+          briefingHeadline.innerText = "비 소식 없는 맑고 쾌적한 출근·등교길입니다.";
+        }
+
+        // [우선순위 2] 날씨·기온 체감 한 줄 문구
+        if (tempDiff > 0) {
+          briefingTempLine.innerText = `오늘은 어제보다 ${tempDiff}°C 높습니다. 한결 포근하게 느껴집니다.`;
+        } else if (tempDiff < 0) {
+          briefingTempLine.innerText = `오늘은 어제보다 ${Math.abs(tempDiff)}°C 낮습니다. 쌀쌀하니 든든한 겉옷을 챙기세요.`;
+        } else {
+          briefingTempLine.innerText = `오늘은 어제와 기온이 비슷합니다. 평소와 같은 옷차림이 좋습니다.`;
         }
 
         // 어제 기온 비교 칩
@@ -641,7 +670,7 @@
 
           const r = data.daily.precipitation_probability_max[i] || 0;
           const code = data.daily.weathercode[i];
-          const meta = getWeatherMeta(code, r);
+          const meta = getForecastMeta(code, r);
 
           const maxT = Math.round(data.daily.temperature_2m_max[i]);
           const minT = Math.round(data.daily.temperature_2m_min[i]);
