@@ -115,7 +115,7 @@
     .briefing-headline {
       font-size: 17px;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.45;
       margin-bottom: 12px;
     }
 
@@ -224,7 +224,7 @@
       margin: 16px 4px 10px 4px;
     }
 
-    /* 3. 간추린 오늘 날씨예보 (세로열 중앙 정렬) */
+    /* 3. 간추린 오늘 날씨예보 (완전 중앙 정렬) */
     .timeline-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -400,7 +400,7 @@
     </div>
   </div>
 
-  <!-- 3. 간추린 오늘 날씨예보 (중앙 정렬 + 피크 시간대 배지) -->
+  <!-- 3. 간추린 오늘 날씨예보 (완전 중앙 정렬) -->
   <div class="section-label">간추린 오늘 날씨예보</div>
   <div class="timeline-grid">
     <!-- 일과 시간 -->
@@ -449,7 +449,7 @@
   </footer>
 
   <script>
-    // 새로고침 버튼 핸들러
+    // 새로고침 버튼 터치 시 무조건 캐시를 깨고 최신 상태로 새로고침
     const reloadBtn = document.getElementById('headerReloadBtn');
     if (reloadBtn) {
       const doReload = (e) => {
@@ -476,6 +476,14 @@
       return { icon: "☁️", text: "흐림" };
     }
 
+    // 24시간 표기를 "오전/오후 몇시경" 한글 포맷으로 변환
+    function formatKoreanHour(h) {
+      if (h === 0 || h === 24) return "자정경";
+      if (h === 12) return "낮 12시경";
+      if (h < 12) return `오전 ${h}시경`;
+      return `오후 ${h - 12}시경`;
+    }
+
     async function fetchWeather() {
       let lat = 37.5665;
       let lon = 126.9780;
@@ -500,7 +508,7 @@
         const yesterdayAvg = Math.round((data.daily.temperature_2m_max[0] + data.daily.temperature_2m_min[0]) / 2);
         const tempDiff = currentTemp - yesterdayAvg;
 
-        // 강수 및 습도
+        // 오늘 강수 및 습도
         const rainProb = data.daily.precipitation_probability_max[1] || 0;
         const currentHour = new Date().getHours();
         const humidity = data.hourly.relativehumidity_2m[24 + currentHour] || 45;
@@ -525,42 +533,11 @@
         document.getElementById('accuRain').innerText = `${accuRain}%`;
         document.getElementById('accuHumidity').innerText = `${humidity}%`;
 
-        // 1. TODAY'S BRIEFING 설정 (50% '초과' 엄격 적용)
-        const needUmbrella = (kmaRain > 50 || accuRain > 50);
-        const umbrellaChip = document.getElementById('umbrellaChip');
-        const umbrellaStatus = document.getElementById('umbrellaStatus');
-        const briefingHeadline = document.getElementById('briefingHeadline');
-
-        if (needUmbrella) {
-          umbrellaChip.className = "chip alert";
-          umbrellaStatus.innerText = "강수확률 50% 초과 (우산 필수! 챙기세요)";
-          briefingHeadline.innerText = "비 예보가 있습니다. 오늘은 현관에서 우산을 꼭 챙기세요!";
-        } else {
-          umbrellaChip.className = "chip safe";
-          umbrellaStatus.innerText = `강수확률 50% 이하 (우산 불필요, ${Math.max(kmaRain, accuRain)}%)`;
-          
-          if (tempDiff <= -3) {
-            briefingHeadline.innerText = "어제보다 훨씬 쌀쌀합니다. 든든한 겉옷을 챙기세요.";
-          } else {
-            briefingHeadline.innerText = "쾌적하고 맑은 출근·등교길입니다. 기분 좋은 하루 시작하세요!";
-          }
-        }
-
-        // 어제 기온 비교 칩
-        const tempDiffStatus = document.getElementById('tempDiffStatus');
-        if (tempDiff > 0) {
-          tempDiffStatus.innerText = `어제보다 ${tempDiff}°C 높음 (포근함)`;
-        } else if (tempDiff < 0) {
-          tempDiffStatus.innerText = `어제보다 ${Math.abs(tempDiff)}°C 낮음 (쌀쌀함)`;
-        } else {
-          tempDiffStatus.innerText = `어제와 비슷한 기온 유지`;
-        }
-
-        // 2. 간추린 오늘 날씨예보 및 피크 시간대(집중 예상) 계산
+        // 시간별 데이터 분석 (오늘 24시간)
         const hourlyTemps = data.hourly.temperature_2m.slice(24, 48);
         const hourlyRains = data.hourly.precipitation_probability.slice(24, 48);
 
-        // 일과 시간 (08:00 ~ 18:00 -> index 8 ~ 18)
+        // 1) 일과 시간 (08:00 ~ 18:00) 피크 추적
         let dayMaxRain = 0;
         let dayPeakHour = 8;
         for (let h = 8; h <= 18; h++) {
@@ -583,7 +560,7 @@
           dayTag.innerText = `⏱️ 강수 가능성 낮음`;
         }
 
-        // 저녁·밤 시간 (18:00 ~ 23:00 -> index 18 ~ 23)
+        // 2) 저녁·밤 시간 (18:00 ~ 23:00) 피크 추적
         let nightMaxRain = 0;
         let nightPeakHour = 18;
         for (let h = 18; h <= 23; h++) {
@@ -606,7 +583,50 @@
           nightTag.innerText = `⏱️ 강수 가능성 낮음`;
         }
 
-        // 3. 주간 날씨 모니터링 테이블 생성 (향후 7일간)
+        // 3) 오늘 전체 중 가장 먼저/집중적으로 비가 오는 피크 시간대 산출 (8시 이후)
+        let overallMaxRain = 0;
+        let overallPeakHour = 8;
+        for (let h = 8; h <= 23; h++) {
+          const r = hourlyRains[h] || 0;
+          if (r > overallMaxRain) {
+            overallMaxRain = r;
+            overallPeakHour = h;
+          }
+        }
+
+        // 1. TODAY'S BRIEFING 설정 (50% 초과 여부 및 피크 시간대 문구 자동 반영)
+        const needUmbrella = (kmaRain > 50 || accuRain > 50 || overallMaxRain > 50);
+        const umbrellaChip = document.getElementById('umbrellaChip');
+        const umbrellaStatus = document.getElementById('umbrellaStatus');
+        const briefingHeadline = document.getElementById('briefingHeadline');
+
+        if (needUmbrella) {
+          umbrellaChip.className = "chip alert";
+          umbrellaStatus.innerText = "강수확률 50% 초과 (우산 필수! 챙기세요)";
+          const formattedTime = formatKoreanHour(overallPeakHour);
+          briefingHeadline.innerText = `${formattedTime}에 비 예보가 있습니다. 오늘은 현관에서 우산을 꼭 챙기세요!`;
+        } else {
+          umbrellaChip.className = "chip safe";
+          umbrellaStatus.innerText = `강수확률 50% 이하 (우산 불필요, ${Math.max(kmaRain, accuRain)}%)`;
+          
+          if (tempDiff <= -3) {
+            briefingHeadline.innerText = "어제보다 훨씬 쌀쌀합니다. 든든한 겉옷을 챙기세요.";
+          } else {
+            briefingHeadline.innerText = "쾌적하고 맑은 출근·등교길입니다. 기분 좋은 하루 시작하세요!";
+          }
+        }
+
+        // 어제 기온 비교 칩
+        const tempDiffStatus = document.getElementById('tempDiffStatus');
+        if (tempDiff > 0) {
+          tempDiffStatus.innerText = `어제보다 ${tempDiff}°C 높음 (포근함)`;
+        } else if (tempDiff < 0) {
+          tempDiffStatus.innerText = `어제보다 ${Math.abs(tempDiff)}°C 낮음 (쌀쌀함)`;
+        } else {
+          tempDiffStatus.innerText = `어제와 비슷한 기온 유지`;
+        }
+
+        // 4. 주간 날씨 모니터링 테이블 생성 (향후 7일간)
         const tableBody = document.getElementById('weeklyTableBody');
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         let tableHtml = '';
