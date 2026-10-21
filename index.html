@@ -12,9 +12,9 @@
   <meta name="application-name" content="모닝날씨">
   <meta name="theme-color" content="#0f131a">
 
-  <!-- 아이폰/갤럭시 공용 100% 인식 고화질 PNG 앱 아이콘 (어두운 배경 + 해와 구름) -->
-  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAUVBMVEUAAAAYHh8cIiUdIyYfJScgJSggJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikVqGkXAAAAHXRSTlMAESIzRFVmd4iZqrvM3e7/M1V3iKq7zN3u////////r+W+5wAAAWxJREFUeNrt20tqw0AQBVCdOI6dOHby/nfsmgQW2YS2pG2G9z7qCgpq04CgS1J2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ29pvdP65H6uvz/Gv249h5v63P9/l8p5vXv1a/k+/d+v58v56pv85/n5+pX48/7v0Pz+7X+/tZuv/c7+/vd7r//Of7u537f76/79z9/f195v6f7+/rc39/f5+5/+f7+/rc39/f5+7/+f7+/lzp//v+vj53fv+/r8+d3//v63Pn9//7+tz5/f++Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pv/z/+/9/d77v1/39/3F4hBfQn4631CAAAAAElFTkSuQmCC">
-  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAUVBMVEUAAAAYHh8cIiUdIyYfJScgJSggJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikhJikVqGkXAAAAHXRSTlMAESIzRFVmd4iZqrvM3e7/M1V3iKq7zN3u////////r+W+5wAAAWxJREFUeNrt20tqw0AQBVCdOI6dOHby/nfsmgQW2YS2pG2G9z7qCgpq04CgS1J2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ29pvdP65H6uvz/Gv249h5v63P9/l8p5vXv1a/k+/d+v58v56pv85/n5+pX48/7v0Pz+7X+/tZuv/c7+/vd7r//Of7u537f76/79z9/f195v6f7+/rc39/f5+5/+f7+/rc39/f5+7/+f7+/lzp//v+vj53fv+/r8+d3//v63Pn9//7+tz5/f++Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pn9//7+XOn/+/6+Pnd+/7+vz53f/+/rc+f3//v63Pv/z/+/9/d77v1/39/3F4hBfQn4631CAAAAAElFTkSuQmCC">
+  <!-- 아이폰/갤럭시 공용 정품 규격 고화질 PNG 앱 아이콘 (블루 스카이 + 입체 햇살 구름) -->
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 
   <!-- 폰트 불러오기 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -298,6 +298,7 @@
       color: var(--text-main);
     }
 
+    /* 피크 시간대 배지 */
     .timeline-tag {
       display: inline-flex;
       align-items: center;
@@ -471,7 +472,6 @@
   </footer>
 
   <script>
-    // 새로고침 버튼 터치 시 즉시 강제 새로고침
     const reloadBtn = document.getElementById('headerReloadBtn');
     if (reloadBtn) {
       const doReload = (e) => {
@@ -489,7 +489,7 @@
       if (c === 3) return { icon: "☁️", text: "구름많음" };
       if (c === 45 || c === 48) return { icon: "🌫️", text: "안개" };
       if (c >= 51 && c <= 55) return { icon: "🌦️", text: "이슬비" };
-      if (c >= 61 && code <= 65) return { icon: "🌧️", text: "비" };
+      if (c >= 61 && c <= 65) return { icon: "🌧️", text: "비" };
       if (c >= 71 && c <= 77) return { icon: "❄️", text: "눈" };
       if (c >= 80 && c <= 82) return { icon: "🌧️", text: "소나기" };
       if (c >= 95 && c <= 99) return { icon: "⛈️", text: "뇌우" };
@@ -514,10 +514,8 @@
       return `오후 ${hour - 12}시경`;
     }
 
-    // 위치 획득 (안전을 위해 1.2초 타임아웃)
     async function getCoordinates() {
       if (!navigator.geolocation) return { lat: 37.5665, lon: 126.9780, name: "서울" };
-      
       return new Promise((resolve) => {
         let isDone = false;
         const timer = setTimeout(() => {
@@ -639,7 +637,6 @@
           nightTag.innerText = `⏱️ 강수 가능성 낮음`;
         }
 
-        // 비 예보 구간
         const rainHours = [];
         for (let h = 8; h <= 23; h++) {
           if ((hRains[h] ?? 0) > 50) rainHours.push(h);
@@ -686,7 +683,6 @@
           tempDiffStatus.innerText = `어제와 비슷한 기온 유지`;
         }
 
-        // 주간 테이블 생성
         const tableBody = document.getElementById('weeklyTableBody');
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         let tableHtml = '';
