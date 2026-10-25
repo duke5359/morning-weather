@@ -38,10 +38,10 @@
     .briefing-sub { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 10px; word-break: keep-all; }
     .badges { display: flex; flex-wrap: wrap; gap: 6px; }
     .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
-    .badge-rain { background: #1e3a8a; color: #93c5fd; }
-    .badge-temp { background: #374151; color: #f3f4f6; }
+    .badge-rain { background: #4c1d4f; color: #f472b6; border: 1px solid #831843; }
+    .badge-temp { background: #334155; color: #f1f5f9; }
 
-    /* 비교 2분할 카드 */
+    /* 현재 날씨 2분할 비교 카드 */
     .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .agency-card { background: var(--card-bg); border-radius: 14px; padding: 14px 12px; text-align: center; border: 1px solid var(--card-border); }
     .agency-card.kma { border-top: 3px solid var(--accent-blue); }
@@ -52,8 +52,13 @@
     .weather-status { font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; }
     .card-meta { margin-top: 10px; font-size: 0.75rem; color: var(--text-sub); border-top: 1px solid #334155; padding-top: 6px; line-height: 1.35; }
 
-    /* 주간 날씨 예보 테이블 */
+    /* 주간 예보 모델 비교 섹션 */
     .section-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
+    .weekly-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .tab-btn { background: #1e293b; border: 1px solid var(--card-border); color: var(--text-sub); padding: 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center; }
+    .tab-btn.active.kma-tab { background: #0c4a6e; border-color: var(--accent-blue); color: #fff; }
+    .tab-btn.active.accu-tab { background: #7c2d12; border-color: var(--accent-orange); color: #fff; }
+
     .weekly-box { background: var(--card-bg); border-radius: 14px; padding: 8px 14px; border: 1px solid var(--card-border); }
     .weekly-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2d3748; font-size: 0.85rem; }
     .weekly-row:last-child { border-bottom: none; }
@@ -75,7 +80,7 @@
     <button class="refresh-btn" onclick="fetchWeatherData()">새로고침</button>
   </div>
 
-  <!-- 시간대별 동적 브리핑 카드 -->
+  <!-- 시간대별 맞춤 브리핑 카드 -->
   <div class="briefing-card">
     <div class="briefing-tag" id="briefingTag">TODAY'S BRIEFING</div>
     <div class="briefing-text" id="mainBriefing">날씨 정보를 실시간으로 계산하고 있습니다...</div>
@@ -83,7 +88,7 @@
     <div class="badges" id="badgeContainer"></div>
   </div>
 
-  <!-- 기상청 / 아큐웨더 2분할 비교 카드 -->
+  <!-- 현재 날씨 비교 카드 (기상청 vs 아큐웨더/글로벌) -->
   <div class="comparison-grid">
     <div class="agency-card kma">
       <div class="agency-name">대한민국 기상청</div>
@@ -101,19 +106,24 @@
       <div class="current-temp" id="accuTemp">--°</div>
       <div class="weather-status" id="accuStatus">불러오는 중</div>
       <div class="card-meta">
-        강수확률: <span id="accuRain">--%</span><br>
         체감온도: <span id="accuFeels">--°</span>
       </div>
     </div>
   </div>
 
-  <!-- 주간 7일 날씨 예보 테이블 (복원 완료) -->
-  <div class="section-title">📅 주간 7일 날씨 예보</div>
-  <div class="weekly-box" id="weeklyForecast">
-    <!-- 자바스크립트로 7일간 예보 자동 생성 -->
+  <!-- 주간 7일 날씨 예보 (기상청 vs 아큐웨더 탭 비교) -->
+  <div class="section-title">📅 주간 7일 모델별 예보 비교</div>
+  <div class="weekly-tabs">
+    <button class="tab-btn active kma-tab" id="tabKma" onclick="switchModel('kma')">기상청(KMA) 예보</button>
+    <button class="tab-btn accu-tab" id="tabAccu" onclick="switchModel('accu')">아큐웨더(ECMWF) 예보</button>
   </div>
+  <div class="weekly-box" id="weeklyForecast"></div>
 
   <script>
+    let globalDataKMA = null;
+    let globalDataECMWF = null;
+    let currentModel = 'kma';
+
     function getWeatherDesc(code) {
       if (code === 0) return { icon: '☀️', text: '맑음' };
       if ([1, 2].includes(code)) return { icon: '🌤️', text: '대체로 맑음' };
@@ -128,11 +138,17 @@
 
     async function fetchWeatherData() {
       try {
-        const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&past_days=1';
-        const res = await fetch(url);
-        const data = await res.json();
+        // 기상청 기본 모델
+        const urlKMA = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&past_days=1';
+        // ECMWF 글로벌 모델 (안전한 표준 엔드포인트)
+        const urlECMWF = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&models=ecmwf_ifs025&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul';
 
-        updateUI(data);
+        const [resKMA, resECMWF] = await Promise.all([fetch(urlKMA), fetch(urlECMWF)]);
+        globalDataKMA = await resKMA.json();
+        globalDataECMWF = await resECMWF.json();
+
+        updateUI(globalDataKMA);
+        renderWeeklyForecast(currentModel);
       } catch (err) {
         document.getElementById('mainBriefing').innerText = '날씨 데이터를 불러오지 못했습니다. 네트워크를 확인해주세요.';
       }
@@ -142,21 +158,28 @@
       const now = new Date();
       const currentHour = now.getHours();
 
-      // 현재 날씨 데이터
       const currentTemp = Math.round(data.current.temperature_2m);
       const currentApparent = Math.round(data.current.apparent_temperature);
       const currentHumidity = data.current.relative_humidity_2m;
       const weatherInfo = getWeatherDesc(data.current.weather_code);
 
-      // 어제 동시간대 기온 비교 (24시간 전)
+      // 어제 동일 시간대 기온 비교
       const yesterdayTemp = Math.round(data.hourly.temperature_2m[currentHour]);
       const tempDiff = currentTemp - yesterdayTemp;
+      const diffAbs = Math.abs(tempDiff);
+      
+      let diffText = '';
+      if (tempDiff === 0) {
+        diffText = '어제 이 시간과 같은 기온입니다.';
+      } else if (tempDiff > 0) {
+        diffText = `어제 이 시간보다 ${diffAbs}°C 높습니다.`;
+      } else {
+        diffText = `어제 이 시간보다 ${diffAbs}°C 낮습니다.`;
+      }
 
-      // 오늘 최고/최저 기온 (daily 배열에서 인덱스 1이 오늘)
       const todayMax = Math.round(data.daily.temperature_2m_max[1]);
       const todayMin = Math.round(data.daily.temperature_2m_min[1]);
 
-      // 오늘 비 예보 시간대 계산 (오전 6시 ~ 밤 12시)
       const hourlyRainProb = data.hourly.precipitation_probability.slice(24, 48);
       const rainHours = [];
       for (let h = Math.max(currentHour, 6); h < 24; h++) {
@@ -171,12 +194,12 @@
         needUmbrella = true;
         const startH = rainHours[0];
         const endH = rainHours[rainHours.length - 1] + 1;
-        rainNotice = `오전 ${startH}시경부터 오후 ${endH}시경까지 비 예보가 있습니다. 우산을 꼭 챙기세요!`;
+        rainNotice = `${startH}시~${endH}시경 비 예보가 있습니다. 우산을 꼭 챙기세요!`;
       } else {
-        rainNotice = '오늘 비 예보 없이 하루 종일 맑고 쾌청하겠습니다.';
+        rainNotice = '오늘 비 예보 없이 야외 활동하기 무난한 날씨입니다.';
       }
 
-      // ================= 시간대별 맞춤 브리핑 =================
+      // 시간대별 분기 멘트
       const pageTitleEl = document.getElementById('pageTitle');
       const briefingTagEl = document.getElementById('briefingTag');
       const mainBriefingEl = document.getElementById('mainBriefing');
@@ -185,100 +208,127 @@
       badgeContainerEl.innerHTML = '';
 
       if (currentHour < 10) {
-        // 1. 오전 10시 이전: 출근/등교
         pageTitleEl.innerText = '출근·등교 날씨 브리핑';
         briefingTagEl.innerText = 'MORNING BRIEFING';
         mainBriefingEl.innerText = rainNotice;
         
-        let tempComment = `오늘은 어제보다 ${Math.abs(tempDiff)}°C ${tempDiff >= 0 ? '높습니다' : '낮습니다'}.`;
-        if (currentTemp <= 10) tempComment += ' 쌀쌀하니 든든한 겉옷을 챙기세요.';
-        else tempComment += ' 가벼운 외투 차림이 적당합니다.';
-        subBriefingEl.innerText = tempComment;
+        let extra = currentTemp <= 10 ? ' 아침 공기가 쌀쌀하니 든든한 겉옷을 챙기세요.' : ' 쾌적한 출근길입니다.';
+        subBriefingEl.innerText = `${diffText}${extra}`;
 
       } else if (currentHour >= 10 && currentHour < 14) {
-        // 2. 오전 10시 ~ 오후 2시: 낮 기온 안내
         pageTitleEl.innerText = '낮 시간대 날씨 브리핑';
         briefingTagEl.innerText = 'AFTERNOON BRIEFING';
         mainBriefingEl.innerText = `오늘 낮 최고 기온은 ${todayMax}°C까지 오르겠습니다.`;
         
-        let dayComment = `현재 기온 ${currentTemp}°C (체감 ${currentApparent}°C)입니다.`;
+        let dayComment = `현재 기온 ${currentTemp}°C로 ${diffText}`;
         if (needUmbrella) dayComment += ` 오후 비 소식이 있으니 이동 시 우산 챙기세요.`;
-        else dayComment += ` 낮 동안 활동하기 무난한 날씨입니다.`;
         subBriefingEl.innerText = dayComment;
 
       } else if (currentHour >= 14 && currentHour < 17) {
-        // 3. 오후 2시 ~ 오후 5시: 현재 및 저녁 날씨
         pageTitleEl.innerText = '오후·퇴근길 날씨 브리핑';
         briefingTagEl.innerText = 'EVENING PREVIEW';
         
-        const eveningTemp = Math.round(data.hourly.temperature_2m[24 + 19]); // 19시 기온
+        const eveningTemp = Math.round(data.hourly.temperature_2m[24 + 19]);
         mainBriefingEl.innerText = `지금 기온은 ${currentTemp}°C이며, 저녁 무렵엔 ${eveningTemp}°C로 내려갑니다.`;
         
-        let eveningComment = '';
+        let eveningComment = `${diffText}`;
         if (rainHours.some(h => h >= 17)) {
-          eveningComment = '퇴근길 비 예보가 잡혀있으니 잊지 말고 우산 챙기세요.';
+          eveningComment += ' 퇴근길 비 예보가 있으니 우산 챙기세요.';
         } else {
-          eveningComment = '저녁 이후 기온이 점차 떨어지니 일교차에 유의하세요.';
+          eveningComment += ' 저녁 이후 기온이 점차 떨어지니 일교차에 유의하세요.';
         }
         subBriefingEl.innerText = eveningComment;
 
       } else {
-        // 4. 오후 5시 이후: 저녁 및 내일 출근길 대비
         pageTitleEl.innerText = '저녁·내일 날씨 브리핑';
         briefingTagEl.innerText = 'NIGHT BRIEFING';
         
         const tomorrowMin = Math.round(data.daily.temperature_2m_min[2]);
         const tomorrowMax = Math.round(data.daily.temperature_2m_max[2]);
-        mainBriefingEl.innerText = `오늘 밤은 ${weatherInfo.text} 날씨가 이어지며 서늘하겠습니다.`;
-        subBriefingEl.innerText = `내일 아침 최저 ${tomorrowMin}°C / 최고 ${tomorrowMax}°C로 예상됩니다. 편안한 저녁 되세요.`;
+        mainBriefingEl.innerText = `오늘 밤은 ${weatherInfo.text} 날씨가 이어지며, 현재 기온은 ${currentTemp}°C입니다.`;
+        subBriefingEl.innerText = `${diffText} 내일은 최저 ${tomorrowMin}°C / 최고 ${tomorrowMax}°C로 예상됩니다.`;
       }
 
-      // 뱃지 영역
+      // 배지 출력
       if (needUmbrella) {
         badgeContainerEl.innerHTML += `<div class="badge badge-rain">강수확률 50% 초과 (우산 필수!)</div>`;
       }
-      badgeContainerEl.innerHTML += `<div class="badge badge-temp">어제보다 ${Math.abs(tempDiff)}°C ${tempDiff >= 0 ? '높음' : '낮음'}</div>`;
+      const badgeDiffText = tempDiff === 0 ? '어제와 같음' : `어제보다 ${diffAbs}°C ${tempDiff > 0 ? '높음' : '낮음'}`;
+      badgeContainerEl.innerHTML += `<div class="badge badge-temp">${badgeDiffText}</div>`;
 
-      // 2분할 비교 카드
+      // 기상청 카드
       document.getElementById('kmaIcon').innerText = weatherInfo.icon;
       document.getElementById('kmaTemp').innerText = `${currentTemp}°`;
       document.getElementById('kmaStatus').innerText = weatherInfo.text;
       document.getElementById('kmaRain').innerText = `${hourlyRainProb[currentHour] || 0}%`;
       document.getElementById('kmaHumidity').innerText = `${currentHumidity}%`;
 
+      // 아큐웨더 카드
       document.getElementById('accuIcon').innerText = weatherInfo.icon;
       document.getElementById('accuTemp').innerText = `${currentTemp}°`;
       document.getElementById('accuStatus').innerText = weatherInfo.text;
-      document.getElementById('accuRain').innerText = `${hourlyRainProb[currentHour] || 0}%`;
       document.getElementById('accuFeels').innerText = `${currentApparent}°`;
+    }
 
-      // ================= 주간 7일 날씨 예보 렌더링 =================
-      const weeklyContainer = document.getElementById('weeklyForecast');
-      weeklyContainer.innerHTML = '';
-      
+    function switchModel(model) {
+      currentModel = model;
+      if (model === 'kma') {
+        document.getElementById('tabKma').classList.add('active');
+        document.getElementById('tabAccu').classList.remove('active');
+      } else {
+        document.getElementById('tabAccu').classList.add('active');
+        document.getElementById('tabKma').classList.remove('active');
+      }
+      renderWeeklyForecast(model);
+    }
+
+    function renderWeeklyForecast(model) {
+      const container = document.getElementById('weeklyForecast');
+      container.innerHTML = '';
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
-      // data.daily의 1번 인덱스가 오늘, 7번 인덱스까지 총 7일치 표기
-      for (let i = 1; i <= 7; i++) {
-        const dateObj = new Date(data.daily.time[i]);
-        const dayName = dayNames[dateObj.getDay()];
-        const label = i === 1 ? '오늘' : `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${dayName})`;
-        const wCode = data.daily.weather_code[i];
-        const dayWeather = getWeatherDesc(wCode);
-        const rainProb = data.daily.precipitation_probability_max[i] || 0;
-        const maxT = Math.round(data.daily.temperature_2m_max[i]);
-        const minT = Math.round(data.daily.temperature_2m_min[i]);
+      if (model === 'kma' && globalDataKMA) {
+        for (let i = 1; i <= 7; i++) {
+          const dateObj = new Date(globalDataKMA.daily.time[i]);
+          const dayName = dayNames[dateObj.getDay()];
+          const label = i === 1 ? '오늘' : `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${dayName})`;
+          const wCode = globalDataKMA.daily.weather_code[i];
+          const weather = getWeatherDesc(wCode);
+          const rain = globalDataKMA.daily.precipitation_probability_max[i] || 0;
+          const maxT = Math.round(globalDataKMA.daily.temperature_2m_max[i]);
+          const minT = Math.round(globalDataKMA.daily.temperature_2m_min[i]);
 
-        weeklyContainer.innerHTML += `
-          <div class="weekly-row">
-            <div class="day-col ${i === 1 ? 'today' : ''}">${label}</div>
-            <div class="icon-col">${dayWeather.icon}</div>
-            <div class="rain-col">${rainProb > 0 ? rainProb + '%' : '-'}</div>
-            <div class="temp-range-col">
-              <span class="min-temp">${minT}°</span> / <strong>${maxT}°</strong>
+          container.innerHTML += `
+            <div class="weekly-row">
+              <div class="day-col ${i === 1 ? 'today' : ''}">${label}</div>
+              <div class="icon-col">${weather.icon}</div>
+              <div class="rain-col">${rain > 0 ? rain + '%' : '-'}</div>
+              <div class="temp-range-col"><span class="min-temp">${minT}°</span> / <strong>${maxT}°</strong></div>
             </div>
-          </div>
-        `;
+          `;
+        }
+      } else if (model === 'accu' && globalDataECMWF) {
+        for (let i = 0; i < 7; i++) {
+          const dateObj = new Date(globalDataECMWF.daily.time[i]);
+          const dayName = dayNames[dateObj.getDay()];
+          const label = i === 0 ? '오늘' : `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${dayName})`;
+          const wCode = globalDataECMWF.daily.weather_code[i];
+          const weather = getWeatherDesc(wCode);
+          const rain = (globalDataECMWF.daily.precipitation_probability_max && globalDataECMWF.daily.precipitation_probability_max[i] != null) 
+                       ? globalDataECMWF.daily.precipitation_probability_max[i] 
+                       : 0;
+          const maxT = Math.round(globalDataECMWF.daily.temperature_2m_max[i]);
+          const minT = Math.round(globalDataECMWF.daily.temperature_2m_min[i]);
+
+          container.innerHTML += `
+            <div class="weekly-row">
+              <div class="day-col ${i === 0 ? 'today' : ''}">${label}</div>
+              <div class="icon-col">${weather.icon}</div>
+              <div class="rain-col">${rain > 0 ? rain + '%' : '-'}</div>
+              <div class="temp-range-col"><span class="min-temp">${minT}°</span> / <strong>${maxT}°</strong></div>
+            </div>
+          `;
+        }
       }
     }
 
