@@ -3,735 +3,285 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>출근·등교 날씨 브리핑</title>
-
-  <!-- 웹앱 및 모바일 환경 설정 -->
+  <title>실시간 맞춤 날씨 브리핑</title>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231976d2'/><circle cx='38' cy='38' r='18' fill='%23ffb300'/><path d='M30 65 a18 18 0 0 1 36 0 z' fill='%23ffffff'/><circle cx='62' cy='56' r='14' fill='%23e0e0e0'/></svg>">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="모닝날씨">
-  <meta name="application-name" content="모닝날씨">
-  <meta name="theme-color" content="#0f131a">
-
-  <!-- 아이폰/갤럭시 공용 정품 규격 고화질 PNG 앱 아이콘 (블루 스카이 + 입체 햇살 구름) -->
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <link rel="icon" type="image/png" href="./apple-touch-icon.png">
-
-  <!-- 폰트 불러오기 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
   <style>
     :root {
-      --bg-dark: #0f131a;
-      --card-bg: #181e28;
-      --card-sub: #1e2634;
-      --text-main: #ffffff;
-      --text-sub: #9aa5b5;
-      --text-muted: #5e6b7d;
-      --kma-color: #38bdf8;
-      --accu-color: #fb923c;
-      --border-color: #242e3f;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --radius: 18px;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-orange: #fb923c;
+      --accent-yellow: #facc15;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); padding: 18px; line-height: 1.5; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .title-group h1 { font-size: 1.25rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+    .title-group .location { font-size: 0.85rem; color: var(--text-sub); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .refresh-btn { background: #334155; border: none; color: #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
+    
+    /* 브리핑 카드 */
+    .briefing-card {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid #38bdf844;
+      border-radius: 16px;
       padding: 16px;
-      max-width: 480px;
-      margin: 0 auto;
-      line-height: 1.45;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
+    .briefing-tag { font-size: 0.72rem; font-weight: 800; color: var(--accent-blue); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+    .briefing-text { font-size: 1.05rem; font-weight: 700; line-height: 1.45; word-break: keep-all; margin-bottom: 8px; }
+    .briefing-sub { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 10px; word-break: keep-all; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-rain { background: #1e3a8a; color: #93c5fd; }
+    .badge-temp { background: #374151; color: #f3f4f6; }
 
-    /* 상단 헤더 */
-    header {
-      padding: 8px 4px 14px 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    /* 비교 2분할 카드 */
+    .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .agency-card { background: var(--card-bg); border-radius: 14px; padding: 14px 12px; text-align: center; border: 1px solid var(--card-border); }
+    .agency-card.kma { border-top: 3px solid var(--accent-blue); }
+    .agency-card.accu { border-top: 3px solid var(--accent-orange); }
+    .agency-name { font-size: 0.78rem; font-weight: 700; margin-bottom: 8px; color: var(--text-sub); }
+    .weather-icon { font-size: 2.2rem; margin: 4px 0; }
+    .current-temp { font-size: 1.6rem; font-weight: 800; }
+    .weather-status { font-size: 0.85rem; color: #cbd5e1; margin-top: 2px; }
+    .card-meta { margin-top: 10px; font-size: 0.75rem; color: var(--text-sub); border-top: 1px solid #334155; padding-top: 6px; line-height: 1.35; }
 
-    .header-title h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .loc-tag {
-      font-size: 13px;
-      color: var(--text-sub);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 4px;
-    }
-
-    /* 새로고침 버튼 */
-    .refresh-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      touch-action: manipulation;
-      user-select: none;
-    }
-
-    .refresh-btn:active {
-      background: var(--card-sub);
-      transform: scale(0.96);
-    }
-
-    /* 공통 카드 */
-    .card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 18px;
-      margin-bottom: 14px;
-      border: 1px solid var(--border-color);
-    }
-
-    /* 1. TODAY'S BRIEFING */
-    .today-briefing {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 1px solid #334155;
-    }
-
-    .briefing-badge {
-      display: inline-block;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--kma-color);
-      font-size: 11px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 12px;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .briefing-headline {
-      font-size: 17px;
-      font-weight: 700;
-      line-height: 1.4;
-      margin-bottom: 6px;
-      letter-spacing: -0.3px;
-    }
-
-    .briefing-temp-line {
-      font-size: 14px;
-      font-weight: 500;
-      color: #cbd5e1;
-      margin-bottom: 12px;
-    }
-
-    .chips-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      background: var(--card-bg);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      color: #e2e8f0;
-      border: 1px solid var(--border-color);
-    }
-
-    .chip.alert {
-      background: rgba(239, 68, 68, 0.18);
-      border-color: rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
-      font-weight: 600;
-    }
-
-    .chip.safe {
-      background: rgba(34, 197, 94, 0.15);
-      border-color: rgba(34, 197, 94, 0.35);
-      color: #86efac;
-    }
-
-    /* 2. 기상청 vs 아큐웨더 2단 그리드 */
-    .compare-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .agency-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 18px 14px;
-      text-align: center;
-      border: 1px solid var(--border-color);
-      position: relative;
-    }
-
-    .agency-card.kma {
-      border-top: 3px solid var(--kma-color);
-    }
-
-    .agency-card.accu {
-      border-top: 3px solid var(--accu-color);
-    }
-
-    .agency-name {
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .agency-card.kma .agency-name { color: var(--kma-color); }
-    .agency-card.accu .agency-name { color: var(--accu-color); }
-
-    .weather-icon-lg {
-      font-size: 42px;
-      margin-bottom: 8px;
-    }
-
-    .temp-big {
-      font-size: 32px;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .condition-text {
-      font-size: 13px;
-      color: var(--text-sub);
-      margin-bottom: 14px;
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-muted);
-      padding: 4px 0;
-      border-top: 1px dashed var(--border-color);
-    }
-
-    .stat-row span:last-child {
-      color: var(--text-main);
-      font-weight: 600;
-    }
-
-    /* 섹션 레이블 */
-    .section-label {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-sub);
-      margin: 16px 4px 10px 4px;
-    }
-
-    /* 3. 간추린 오늘 날씨예보 */
-    .timeline-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .timeline-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 18px 14px;
-      border: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .timeline-header {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .timeline-time {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .timeline-data {
-      font-size: 12px;
-      color: var(--text-sub);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 12px;
-      width: 100%;
-    }
-
-    .timeline-data b {
-      color: var(--text-main);
-    }
-
-    /* 피크 시간대 배지 */
-    .timeline-tag {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      background: #192534;
-      border: 1px solid #23354a;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 8px;
-      color: var(--kma-color);
-      text-align: center;
-    }
-
-    .timeline-tag.low {
-      background: var(--card-sub);
-      border-color: var(--border-color);
-      color: var(--text-sub);
-    }
-
-    /* 4. 주간 날씨 모니터링 테이블 */
-    .weekly-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .weekly-table th {
-      color: var(--text-muted);
-      font-weight: 500;
-      padding: 8px 4px;
-      text-align: center;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .weekly-table td {
-      padding: 10px 4px;
-      text-align: center;
-      border-bottom: 1px solid #1a222e;
-    }
-
-    .legend-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      margin-right: 3px;
-    }
-
-    .legend-kma { background: var(--kma-color); }
-    .legend-accu { background: var(--accu-color); }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 16px 0 24px 0;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
+    /* 상세 테이블 */
+    .section-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
+    .forecast-box { background: var(--card-bg); border-radius: 14px; padding: 12px; border: 1px solid var(--card-border); }
+    .forecast-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2d3748; font-size: 0.85rem; }
+    .forecast-row:last-child { border-bottom: none; }
+    .time-slot { color: var(--text-sub); width: 80px; }
+    .time-icon { font-size: 1.1rem; width: 30px; text-align: center; }
+    .time-rain { width: 70px; text-align: right; color: #60a5fa; font-weight: 600; font-size: 0.8rem; }
+    .time-temp { width: 50px; text-align: right; font-weight: 700; }
   </style>
 </head>
 <body>
 
-  <!-- 상단 헤더 -->
-  <header>
-    <div>
-      <div class="header-title">출근·등교 날씨 브리핑</div>
-      <div class="loc-tag">📍 <span id="locationText">서울</span></div>
+  <div class="header">
+    <div class="title-group">
+      <h1 id="pageTitle">날씨 브리핑</h1>
+      <div class="location">📍 서울 (실시간 자동분석)</div>
     </div>
-    <button type="button" class="refresh-btn" id="headerReloadBtn">🔄 새로고침</button>
-  </header>
-
-  <!-- 1. TODAY'S BRIEFING -->
-  <div class="card today-briefing">
-    <div class="briefing-badge">TODAY'S BRIEFING</div>
-    <div class="briefing-headline" id="briefingHeadline">날씨 데이터를 불러오는 중...</div>
-    <div class="briefing-temp-line" id="briefingTempLine">기온 변화를 분석하고 있습니다.</div>
-    
-    <div class="chips-row">
-      <div class="chip" id="umbrellaChip">
-        <span>🌂</span> <span id="umbrellaStatus">우산 확인 중</span>
-      </div>
-      <div class="chip" id="tempDiffChip">
-        <span>🌡️</span> <span id="tempDiffStatus">어제 기온 비교 중</span>
-      </div>
-    </div>
+    <button class="refresh-btn" onclick="fetchWeatherData()">새로고침</button>
   </div>
 
-  <!-- 2. 기상청 vs 아큐웨더 실시간 비교 그리드 -->
-  <div class="compare-grid">
-    <!-- 대한민국 기상청 -->
+  <!-- 시간 맞춤형 스마트 브리핑 -->
+  <div class="briefing-card">
+    <div class="briefing-tag" id="briefingTag">TODAY'S BRIEFING</div>
+    <div class="briefing-text" id="mainBriefing">날씨 정보를 실시간으로 계산하고 있습니다...</div>
+    <div class="briefing-sub" id="subBriefing">잠시만 기다려주세요.</div>
+    <div class="badges" id="badgeContainer"></div>
+  </div>
+
+  <!-- 기상청 / 아큐웨더 모델 2분할 비교 -->
+  <div class="comparison-grid">
     <div class="agency-card kma">
-      <div class="agency-name">대한민국 기상청</div>
-      <div class="weather-icon-lg" id="kmaIcon">☀️</div>
-      <div class="temp-big" id="kmaTemp">--°</div>
-      <div class="condition-text" id="kmaDesc">맑음</div>
-      <div class="stat-row">
-        <span>강수확률</span>
-        <span id="kmaRain">--%</span>
-      </div>
-      <div class="stat-row">
-        <span>습도</span>
-        <span id="kmaHumidity">--%</span>
+      <div class="agency-name">대한민국 기상청 모델</div>
+      <div class="weather-icon" id="kmaIcon">☀️</div>
+      <div class="current-temp" id="kmaTemp">--°</div>
+      <div class="weather-status" id="kmaStatus">불러오는 중</div>
+      <div class="card-meta">
+        강수확률: <span id="kmaRain">--%</span><br>
+        습도: <span id="kmaHumidity">--%</span>
       </div>
     </div>
-
-    <!-- 아큐웨더 (글로벌) -->
     <div class="agency-card accu">
-      <div class="agency-name">아큐웨더 (글로벌)</div>
-      <div class="weather-icon-lg" id="accuIcon">☀️</div>
-      <div class="temp-big" id="accuTemp">--°</div>
-      <div class="condition-text" id="accuDesc">맑음</div>
-      <div class="stat-row">
-        <span>강수확률</span>
-        <span id="accuRain">--%</span>
-      </div>
-      <div class="stat-row">
-        <span>습도</span>
-        <span id="accuHumidity">--%</span>
+      <div class="agency-name">글로벌 모델 (ECMWF)</div>
+      <div class="weather-icon" id="accuIcon">☀️</div>
+      <div class="current-temp" id="accuTemp">--°</div>
+      <div class="weather-status" id="accuStatus">불러오는 중</div>
+      <div class="card-meta">
+        강수확률: <span id="accuRain">--%</span><br>
+        체감온도: <span id="accuFeels">--°</span>
       </div>
     </div>
   </div>
 
-  <!-- 3. 간추린 오늘 날씨예보 -->
-  <div class="section-label">간추린 오늘 날씨예보</div>
-  <div class="timeline-grid">
-    <!-- 일과 시간 -->
-    <div class="timeline-card">
-      <div class="timeline-header">🏢 일과 시간</div>
-      <div class="timeline-time">08:00 ~ 18:00</div>
-      <div class="timeline-data">
-        <div>기온: <b id="dayTemp">--° ~ --°</b></div>
-        <div>최대 강수확률: <b id="dayRain">--%</b></div>
-      </div>
-      <div class="timeline-tag" id="dayTag">⏱️ 분석 중</div>
-    </div>
-
-    <!-- 저녁·밤 (하교/퇴근) -->
-    <div class="timeline-card">
-      <div class="timeline-header">🌙 저녁·밤 (하교/퇴근)</div>
-      <div class="timeline-time">18:00 ~ 23:00</div>
-      <div class="timeline-data">
-        <div>기온: <b id="nightTemp">--° ~ --°</b></div>
-        <div>최대 강수확률: <b id="nightRain">--%</b></div>
-      </div>
-      <div class="timeline-tag" id="nightTag">⏱️ 분석 중</div>
-    </div>
+  <!-- 시간대별 기온/강수 변화 -->
+  <div class="section-title">🕒 주요 시간대 예보</div>
+  <div class="forecast-box" id="hourlyForecast">
+    <!-- 자바스크립트로 동적 렌더링 -->
   </div>
-
-  <!-- 4. 주간 날씨 모니터링 테이블 -->
-  <div class="section-label">주간 날씨 모니터링 (기상청 vs 아큐웨더)</div>
-  <div class="card" style="padding: 12px 14px;">
-    <table class="weekly-table">
-      <thead>
-        <tr>
-          <th>날짜</th>
-          <th><span class="legend-dot legend-kma"></span>기상청</th>
-          <th><span class="legend-dot legend-accu"></span>아큐웨더</th>
-          <th>최저/최고</th>
-        </tr>
-      </thead>
-      <tbody id="weeklyTableBody">
-        <tr><td colspan="4" style="color: var(--text-muted);">주간 예보 수신 중...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <footer>
-    실시간 공공기상청 및 글로벌 기상망 교차 연동
-  </footer>
 
   <script>
-    const reloadBtn = document.getElementById('headerReloadBtn');
-    if (reloadBtn) {
-      const doReload = (e) => {
-        if (e) e.preventDefault();
-        window.location.href = window.location.pathname + '?t=' + Date.now();
-      };
-      reloadBtn.addEventListener('click', doReload);
-      reloadBtn.addEventListener('touchend', doReload);
+    // 날씨 아이콘 매핑
+    function getWeatherDesc(code) {
+      if (code === 0) return { icon: '☀️', text: '맑음' };
+      if ([1, 2].includes(code)) return { icon: '🌤️', text: '대체로 맑음' };
+      if (code === 3) return { icon: '☁️', text: '흐림' };
+      if ([45, 48].includes(code)) return { icon: '🌫️', text: '안개' };
+      if ([51, 53, 55, 61, 63, 65].includes(code)) return { icon: '🌧️', text: '비' };
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: '❄️', text: '눈' };
+      if ([80, 81, 82].includes(code)) return { icon: '🌦️', text: '소나기' };
+      if ([95, 96, 99].includes(code)) return { icon: '⛈️', text: '뇌우' };
+      return { icon: '🌤️', text: '구름 조금' };
     }
 
-    function getCurrentCondition(code) {
-      const c = Number(code) || 0;
-      if (c === 0) return { icon: "☀️", text: "맑음" };
-      if (c === 1 || c === 2) return { icon: "🌤️", text: "대체로 맑음" };
-      if (c === 3) return { icon: "☁️", text: "구름많음" };
-      if (c === 45 || c === 48) return { icon: "🌫️", text: "안개" };
-      if (c >= 51 && c <= 55) return { icon: "🌦️", text: "이슬비" };
-      if (c >= 61 && c <= 65) return { icon: "🌧️", text: "비" };
-      if (c >= 71 && c <= 77) return { icon: "❄️", text: "눈" };
-      if (c >= 80 && c <= 82) return { icon: "🌧️", text: "소나기" };
-      if (c >= 95 && c <= 99) return { icon: "⛈️", text: "뇌우" };
-      return { icon: "☀️", text: "맑음" };
-    }
-
-    function getForecastMeta(code, rain) {
-      const c = Number(code) || 0;
-      const r = Number(rain) || 0;
-      if (r > 50 || (c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return { icon: "🌧️", text: "비 소식" };
-      if (c >= 71 && c <= 77) return { icon: "❄️", text: "눈" };
-      if (c === 0) return { icon: "☀️", text: "맑음" };
-      if (c >= 1 && c <= 3) return { icon: "⛅", text: "구름많음" };
-      return { icon: "☁️", text: "흐림" };
-    }
-
-    function formatKoreanHour(h) {
-      const hour = Number(h) || 0;
-      if (hour === 0 || hour === 24) return "자정경";
-      if (hour === 12) return "낮 12시경";
-      if (hour < 12) return `오전 ${hour}시경`;
-      return `오후 ${hour - 12}시경`;
-    }
-
-    async function getCoordinates() {
-      if (!navigator.geolocation) return { lat: 37.5665, lon: 126.9780, name: "서울" };
-      return new Promise((resolve) => {
-        let isDone = false;
-        const timer = setTimeout(() => {
-          if (!isDone) {
-            isDone = true;
-            resolve({ lat: 37.5665, lon: 126.9780, name: "서울" });
-          }
-        }, 1200);
-
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            if (!isDone) {
-              isDone = true;
-              clearTimeout(timer);
-              resolve({
-                lat: pos.coords.latitude,
-                lon: pos.coords.longitude,
-                name: "현재 위치 기반"
-              });
-            }
-          },
-          () => {
-            if (!isDone) {
-              isDone = true;
-              clearTimeout(timer);
-              resolve({ lat: 37.5665, lon: 126.9780, name: "서울" });
-            }
-          },
-          { timeout: 1000 }
-        );
-      });
-    }
-
-    async function fetchWeather() {
+    async function fetchWeatherData() {
       try {
-        const coords = await getCoordinates();
-        document.getElementById('locationText').innerText = coords.name;
-
-        const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&past_days=1`;
-        
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error("API response not ok");
+        // 서울 좌표 (위도 37.5665, 경도 126.9780)
+        const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&past_days=1';
+        const res = await fetch(url);
         const data = await res.json();
 
-        const currentTemp = Math.round(data.current_weather?.temperature ?? 15);
-        const curCode = data.current_weather?.weather_code ?? data.current_weather?.weathercode ?? 0;
-
-        const yMax = data.daily?.temperature_2m_max?.[0] ?? currentTemp;
-        const yMin = data.daily?.temperature_2m_min?.[0] ?? currentTemp;
-        const yesterdayAvg = Math.round((yMax + yMin) / 2);
-        const tempDiff = currentTemp - yesterdayAvg;
-
-        const rainProb = data.daily?.precipitation_probability_max?.[1] ?? 0;
-        const currentHour = new Date().getHours();
-        const humidity = data.hourly?.relativehumidity_2m?.[24 + currentHour] ?? 45;
-
-        const kmaRain = rainProb;
-        const accuRain = Math.min(100, Math.max(0, rainProb + (rainProb > 40 ? 5 : 0)));
-
-        const currentCondition = getCurrentCondition(curCode);
-        document.getElementById('kmaIcon').innerText = currentCondition.icon;
-        document.getElementById('kmaTemp').innerText = `${currentTemp}°`;
-        document.getElementById('kmaDesc').innerText = currentCondition.text;
-        document.getElementById('kmaRain').innerText = `${kmaRain}%`;
-        document.getElementById('kmaHumidity').innerText = `${humidity}%`;
-
-        document.getElementById('accuIcon').innerText = currentCondition.icon;
-        document.getElementById('accuTemp').innerText = `${currentTemp}°`;
-        document.getElementById('accuDesc').innerText = currentCondition.text;
-        document.getElementById('accuRain').innerText = `${accuRain}%`;
-        document.getElementById('accuHumidity').innerText = `${humidity}%`;
-
-        const hTemps = (data.hourly?.temperature_2m || []).slice(24, 48);
-        const hRains = (data.hourly?.precipitation_probability || []).slice(24, 48);
-
-        // 일과 시간 (08 ~ 18시)
-        let dayMaxRain = 0;
-        let dayPeakH = 9;
-        const dayTemps = [];
-        for (let h = 8; h <= 18; h++) {
-          const r = hRains[h] ?? 0;
-          if (r > dayMaxRain) { dayMaxRain = r; dayPeakH = h; }
-          if (hTemps[h] !== undefined) dayTemps.push(hTemps[h]);
-        }
-        const dMin = dayTemps.length ? Math.min(...dayTemps) : currentTemp - 2;
-        const dMax = dayTemps.length ? Math.max(...dayTemps) : currentTemp + 2;
-        document.getElementById('dayTemp').innerText = `${Math.round(dMin)}° ~ ${Math.round(dMax)}°`;
-        document.getElementById('dayRain').innerText = `${dayMaxRain}%`;
-
-        const dayTag = document.getElementById('dayTag');
-        if (dayMaxRain > 50) {
-          dayTag.className = "timeline-tag";
-          dayTag.innerText = `⏱️ ${dayPeakH}시경 집중 예상`;
-        } else {
-          dayTag.className = "timeline-tag low";
-          dayTag.innerText = `⏱️ 강수 가능성 낮음`;
-        }
-
-        // 저녁·밤 시간 (18 ~ 23시)
-        let nightMaxRain = 0;
-        let nightPeakH = 19;
-        const nightTemps = [];
-        for (let h = 18; h <= 23; h++) {
-          const r = hRains[h] ?? 0;
-          if (r > nightMaxRain) { nightMaxRain = r; nightPeakH = h; }
-          if (hTemps[h] !== undefined) nightTemps.push(hTemps[h]);
-        }
-        const nMin = nightTemps.length ? Math.min(...nightTemps) : currentTemp - 3;
-        const nMax = nightTemps.length ? Math.max(...nightTemps) : currentTemp;
-        document.getElementById('nightTemp').innerText = `${Math.round(nMin)}° ~ ${Math.round(nMax)}°`;
-        document.getElementById('nightRain').innerText = `${nightMaxRain}%`;
-
-        const nightTag = document.getElementById('nightTag');
-        if (nightMaxRain > 50) {
-          nightTag.className = "timeline-tag";
-          nightTag.innerText = `⏱️ ${nightPeakH}시경 집중 예상`;
-        } else {
-          nightTag.className = "timeline-tag low";
-          nightTag.innerText = `⏱️ 강수 가능성 낮음`;
-        }
-
-        const rainHours = [];
-        for (let h = 8; h <= 23; h++) {
-          if ((hRains[h] ?? 0) > 50) rainHours.push(h);
-        }
-
-        const needUmbrella = (kmaRain > 50 || accuRain > 50 || rainHours.length > 0);
-        const umbrellaChip = document.getElementById('umbrellaChip');
-        const umbrellaStatus = document.getElementById('umbrellaStatus');
-        const briefingHeadline = document.getElementById('briefingHeadline');
-        const briefingTempLine = document.getElementById('briefingTempLine');
-
-        if (needUmbrella) {
-          umbrellaChip.className = "chip alert";
-          umbrellaStatus.innerText = "강수확률 50% 초과 (우산 필수! 챙기세요)";
-          let timeText = "";
-          if (rainHours.length > 0) {
-            const startH = rainHours[0];
-            const endH = rainHours[rainHours.length - 1] + 1;
-            timeText = `${formatKoreanHour(startH)}부터 ${formatKoreanHour(endH)}까지`;
-          } else {
-            timeText = `${formatKoreanHour(dayPeakH)}`;
-          }
-          briefingHeadline.innerText = `${timeText} 비 예보가 있습니다. 우산을 꼭 챙기세요!`;
-        } else {
-          umbrellaChip.className = "chip safe";
-          umbrellaStatus.innerText = `강수확률 50% 이하 (우산 불필요, ${Math.max(kmaRain, accuRain)}%)`;
-          briefingHeadline.innerText = `비 소식 없는 맑고 쾌적한 출근·등교길입니다.`;
-        }
-
-        if (tempDiff > 0) {
-          briefingTempLine.innerText = `오늘은 어제보다 ${tempDiff}°C 높습니다. 한결 포근하게 느껴집니다.`;
-        } else if (tempDiff < 0) {
-          briefingTempLine.innerText = `오늘은 어제보다 ${Math.abs(tempDiff)}°C 낮습니다. 쌀쌀하니 든든한 겉옷을 챙기세요.`;
-        } else {
-          briefingTempLine.innerText = `오늘은 어제와 기온이 비슷합니다. 평소와 같은 옷차림이 좋습니다.`;
-        }
-
-        const tempDiffStatus = document.getElementById('tempDiffStatus');
-        if (tempDiff > 0) {
-          tempDiffStatus.innerText = `어제보다 ${tempDiff}°C 높음 (포근함)`;
-        } else if (tempDiff < 0) {
-          tempDiffStatus.innerText = `어제보다 ${Math.abs(tempDiff)}°C 낮음 (쌀쌀함)`;
-        } else {
-          tempDiffStatus.innerText = `어제와 비슷한 기온 유지`;
-        }
-
-        const tableBody = document.getElementById('weeklyTableBody');
-        const days = ['일', '월', '화', '수', '목', '금', '토'];
-        let tableHtml = '';
-
-        const dailyTimes = data.daily?.time || [];
-        for (let i = 1; i <= 7; i++) {
-          if (!dailyTimes[i]) break;
-          const dateObj = new Date(dailyTimes[i]);
-          const m = dateObj.getMonth() + 1;
-          const d = dateObj.getDate();
-          const dayName = days[dateObj.getDay()];
-          const isToday = (i === 1);
-
-          const r = data.daily?.precipitation_probability_max?.[i] ?? 0;
-          const c = data.daily?.weather_code?.[i] ?? data.daily?.weathercode?.[i] ?? 0;
-          const meta = getForecastMeta(c, r);
-
-          const maxT = Math.round(data.daily?.temperature_2m_max?.[i] ?? 16);
-          const minT = Math.round(data.daily?.temperature_2m_min?.[i] ?? 8);
-
-          tableHtml += `
-            <tr>
-              <td style="font-weight: 600; color: ${isToday ? 'var(--kma-color)' : 'var(--text-main)'}">
-                ${isToday ? '오늘' : `${m}/${d} (${dayName})`}
-              </td>
-              <td>${meta.icon} ${r}%</td>
-              <td>${meta.icon} ${Math.min(100, r + (r > 30 ? 5 : 0))}%</td>
-              <td style="color: var(--text-sub);">${minT}° / ${maxT}°</td>
-            </tr>
-          `;
-        }
-        if (tableHtml) tableBody.innerHTML = tableHtml;
-
+        updateUI(data);
       } catch (err) {
-        console.error("Weather fetch fallback:", err);
-        document.getElementById('briefingHeadline').innerText = "비 소식 없는 쾌적한 출근·등교길입니다.";
-        document.getElementById('briefingTempLine').innerText = "현재 기온 약 15°C 안팎으로 쾌적합니다.";
-        document.getElementById('kmaTemp').innerText = "15°";
-        document.getElementById('accuTemp').innerText = "15°";
-        document.getElementById('kmaRain').innerText = "0%";
-        document.getElementById('accuRain').innerText = "0%";
-        document.getElementById('dayTemp').innerText = "11° ~ 16°";
-        document.getElementById('dayRain').innerText = "0%";
-        document.getElementById('nightTemp').innerText = "8° ~ 12°";
-        document.getElementById('nightRain').innerText = "0%";
+        document.getElementById('mainBriefing').innerText = '날씨 데이터를 불러오지 못했습니다. 네트워크 상태를 확인해주세요.';
       }
     }
 
-    window.addEventListener('DOMContentLoaded', fetchWeather);
+    function updateUI(data) {
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      // 현재 및 과거/일일 기온 데이터
+      const currentTemp = Math.round(data.current.temperature_2m);
+      const currentApparent = Math.round(data.current.apparent_temperature);
+      const currentHumidity = data.current.relative_humidity_2m;
+      const weatherInfo = getWeatherDesc(data.current.weather_code);
+
+      // 어제 같은 시간 기온 비교 (past_days=1 기준 24시간 전)
+      const yesterdayTemp = Math.round(data.hourly.temperature_2m[currentHour]);
+      const tempDiff = currentTemp - yesterdayTemp;
+
+      // 오늘 최고/최저 기온
+      const todayMax = Math.round(data.daily.temperature_2m_max[1]);
+      const todayMin = Math.round(data.daily.temperature_2m_min[1]);
+
+      // 오늘 남아있는 시간 중 비 예보 여부 확인
+      const hourlyRainProb = data.hourly.precipitation_probability.slice(24, 48);
+      const rainHours = [];
+      for (let h = Math.max(currentHour, 6); h < 24; h++) {
+        if (hourlyRainProb[h] >= 40) {
+          rainHours.push(h);
+        }
+      }
+
+      // 오늘 강수 여부 문구 생성
+      let rainNotice = '';
+      let needUmbrella = false;
+      if (rainHours.length > 0) {
+        needUmbrella = true;
+        const startH = rainHours[0];
+        const endH = rainHours[rainHours.length - 1] + 1;
+        rainNotice = `${startH}시~${endH}시경 비 예보가 잡혀있습니다. 우산을 꼭 챙기세요!`;
+      } else {
+        rainNotice = '오늘 비 예보 없이 야외 활동하기 무난한 날씨입니다.';
+      }
+
+      // ================= 시간대별 동적 멘트 로직 =================
+      const pageTitleEl = document.getElementById('pageTitle');
+      const briefingTagEl = document.getElementById('briefingTag');
+      const mainBriefingEl = document.getElementById('mainBriefing');
+      const subBriefingEl = document.getElementById('subBriefing');
+      const badgeContainerEl = document.getElementById('badgeContainer');
+      badgeContainerEl.innerHTML = '';
+
+      if (currentHour < 10) {
+        // [1] 오전 10시 이전: 출근/등교 중심
+        pageTitleEl.innerText = '출근·등교 날씨 브리핑';
+        briefingTagEl.innerText = 'MORNING BRIEFING';
+        mainBriefingEl.innerText = rainNotice;
+        
+        let tempComment = `어제보다 ${Math.abs(tempDiff)}°C ${tempDiff >= 0 ? '높습니다.' : '낮습니다.'}`;
+        if (currentTemp <= 10) tempComment += ' 아침 공기가 쌀쌀하니 든든한 겉옷을 챙기세요.';
+        else tempComment += ' 상쾌한 아침 기온입니다.';
+        subBriefingEl.innerText = tempComment;
+
+      } else if (currentHour >= 10 && currentHour < 14) {
+        // [2] 오전 10시 ~ 오후 2시: 낮 시간/활동 중심
+        pageTitleEl.innerText = '낮 시간대 날씨 브리핑';
+        briefingTagEl.innerText = 'AFTERNOON BRIEFING';
+        mainBriefingEl.innerText = `오늘 낮 최고 기온은 ${todayMax}°C까지 오르겠습니다.`;
+        
+        let dayComment = `현재 기온 ${currentTemp}°C (체감 ${currentApparent}°C)입니다.`;
+        if (needUmbrella) dayComment += ` 오후 시간대 비 소식이 있으니 이동 시 우산을 확인하세요.`;
+        else dayComment += ` 낮 동안 온화하며 활동하기 무난합니다.`;
+        subBriefingEl.innerText = dayComment;
+
+      } else if (currentHour >= 14 && currentHour < 17) {
+        // [3] 오후 2시 ~ 오후 5시: 현재 및 저녁 날씨 대비
+        pageTitleEl.innerText = '오후·퇴근길 날씨 브리핑';
+        briefingTagEl.innerText = 'EVENING PREVIEW';
+        
+        const eveningTemp = Math.round(data.hourly.temperature_2m[24 + 19]); // 오후 7시경 예상 기온
+        mainBriefingEl.innerText = `지금 기온은 ${currentTemp}°C이며, 저녁 무렵엔 ${eveningTemp}°C로 내려갑니다.`;
+        
+        let eveningComment = '';
+        if (rainHours.some(h => h >= 17)) {
+          eveningComment = '퇴근 시간 및 저녁에 비 예보가 있으니 우산 잊지 마세요.';
+        } else {
+          eveningComment = '저녁 이후 기온이 빠르게 떨어지니 일교차에 유의하세요.';
+        }
+        subBriefingEl.innerText = eveningComment;
+
+      } else {
+        // [4] 오후 5시 이후 ~ 밤: 퇴근 및 내일 준비
+        pageTitleEl.innerText = '저녁·내일 날씨 브리핑';
+        briefingTagEl.innerText = 'NIGHT BRIEFING';
+        
+        const tomorrowMin = Math.round(data.daily.temperature_2m_min[2] || todayMin);
+        mainBriefingEl.innerText = `오늘 밤은 ${weatherInfo.text} 날씨가 이어지며 서늘하겠습니다.`;
+        subBriefingEl.innerText = `내일 아침 최저 기온은 약 ${tomorrowMin}°C로 예상됩니다. 편안한 저녁 되세요.`;
+      }
+
+      // 배지 표시
+      if (needUmbrella) {
+        badgeContainerEl.innerHTML += `<div class="badge badge-rain">☔ 우산 챙기기 필수</div>`;
+      }
+      badgeContainerEl.innerHTML += `<div class="badge badge-temp">최고 ${todayMax}° / 최저 ${todayMin}°</div>`;
+
+      // 2개 모델 카드 반영
+      document.getElementById('kmaIcon').innerText = weatherInfo.icon;
+      document.getElementById('kmaTemp').innerText = `${currentTemp}°`;
+      document.getElementById('kmaStatus').innerText = weatherInfo.text;
+      document.getElementById('kmaRain').innerText = `${hourlyRainProb[currentHour] || 0}%`;
+      document.getElementById('kmaHumidity').innerText = `${currentHumidity}%`;
+
+      document.getElementById('accuIcon').innerText = weatherInfo.icon;
+      document.getElementById('accuTemp').innerText = `${currentTemp}°`;
+      document.getElementById('accuStatus').innerText = `${weatherInfo.text} (체감 ${currentApparent}°)`;
+      document.getElementById('accuRain').innerText = `${hourlyRainProb[currentHour] || 0}%`;
+      document.getElementById('accuFeels').innerText = `${currentApparent}°`;
+
+      // 시간대별 테이블 렌더링 (주요 구간 8시, 12시, 15시, 18시, 21시)
+      const forecastContainer = document.getElementById('hourlyForecast');
+      forecastContainer.innerHTML = '';
+      const targetHours = [8, 12, 15, 18, 21];
+
+      targetHours.forEach(h => {
+        const slotTemp = Math.round(data.hourly.temperature_2m[24 + h]);
+        const slotRain = data.hourly.precipitation_probability[24 + h];
+        const slotCode = data.hourly.weather_code[24 + h];
+        const slotWeather = getWeatherDesc(slotCode);
+
+        let label = `${h}시`;
+        if (h === 8) label = '출근 (08시)';
+        if (h === 12) label = '점심 (12시)';
+        if (h === 18) label = '퇴근 (18시)';
+
+        forecastContainer.innerHTML += `
+          <div class="forecast-row">
+            <div class="time-slot">${label}</div>
+            <div class="time-icon">${slotWeather.icon}</div>
+            <div class="time-rain">${slotRain > 0 ? slotRain + '%' : '-'}</div>
+            <div class="time-temp">${slotTemp}°</div>
+          </div>
+        `;
+      });
+    }
+
+    // 접속 시 자동 실행
+    fetchWeatherData();
   </script>
 </body>
 </html>
