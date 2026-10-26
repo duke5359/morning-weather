@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>실시간 맞춤 날씨 브리핑</title>
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231976d2'/><circle cx='38' cy='38' r='18' fill='%23ffb300'/><path d='M30 65 a18 18 0 0 1 36 0 z' fill='%23ffffff'/><circle cx='62' cy='56' r='14' fill='%23e0e0e0'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231976d2'/><circle cx='38' cy='38' r='18' fill='%23ffb300'/><path d='M30 65 a18 18 0 0 1 36 0 z' fill='%23ffffff'/><circle cx='62' cy='56' r='14' fill='%23e0e0e0'/></svg>">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
@@ -162,83 +162,103 @@
   <div class="weekly-box" id="weeklyForecast"></div>
 
   <script>
-    let globalDataKMA = null;
-    let globalDataBase = null;
-    let globalDataAccu = null;
+    let dataKMA = null;
+    let dataAccu = null;
     let currentModel = 'kma';
 
     function getWeatherDesc(code, rainProb = null) {
-      if (rainProb !== null && rainProb < 30 && [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+      const c = Number(code || 0);
+      if (rainProb !== null && rainProb < 30 && [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(c)) {
         return { icon: '🌤️', text: '구름 조금', desc: '구름 조금 끼고 무난한' };
       }
-      if (code === 0) return { icon: '☀️', text: '맑음', desc: '맑고 화창한' };
-      if ([1, 2].includes(code)) return { icon: '🌤️', text: '대체로 맑음', desc: '구름 조금 끼고 포근한' };
-      if (code === 3) return { icon: '☁️', text: '흐림', desc: '구름 많고 흐린' };
-      if ([45, 48].includes(code)) return { icon: '🌫️', text: '안개', desc: '안개가 낀' };
-      if ([51, 53, 55, 61, 63, 65].includes(code)) return { icon: '🌧️', text: '비', desc: '비가 내리는' };
-      if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: '❄️', text: '눈', desc: '눈이 내리는' };
-      if ([80, 81, 82].includes(code)) return { icon: '🌦️', text: '소나기', desc: '소나기가 지나는' };
-      if ([95, 96, 99].includes(code)) return { icon: '⛈️', text: '뇌우', desc: '천둥번개를 동반한 비가 오는' };
+      if (c === 0) return { icon: '☀️', text: '맑음', desc: '맑고 화창한' };
+      if ([1, 2].includes(c)) return { icon: '🌤️', text: '대체로 맑음', desc: '구름 조금 끼고 포근한' };
+      if (c === 3) return { icon: '☁️', text: '흐림', desc: '구름 많고 흐린' };
+      if ([45, 48].includes(c)) return { icon: '🌫️', text: '안개', desc: '안개가 낀' };
+      if ([51, 53, 55, 61, 63, 65].includes(c)) return { icon: '🌧️', text: '비', desc: '비가 내리는' };
+      if ([71, 73, 75, 77, 85, 86].includes(c)) return { icon: '❄️', text: '눈', desc: '눈이 내리는' };
+      if ([80, 81, 82].includes(c)) return { icon: '🌦️', text: '소나기', desc: '소나기가 지나는' };
+      if ([95, 96, 99].includes(c)) return { icon: '⛈️', text: '뇌우', desc: '천둥번개를 동반한 비가 오는' };
       return { icon: '🌤️', text: '구름 조금', desc: '대체로 무난한' };
     }
 
     function roundRainProb(prob) {
-      if (!prob || prob < 10) return 0;
-      return Math.round(prob / 10) * 10;
+      const p = Number(prob || 0);
+      if (p < 10) return 0;
+      return Math.round(p / 10) * 10;
+    }
+
+    // 배열에서 null 값 안전하게 걸러내는 헬퍼 함수
+    function safeVal(val, fallback = 15) {
+      return (val !== null && val !== undefined && !isNaN(val)) ? Math.round(Number(val)) : fallback;
     }
 
     async function fetchWeatherData() {
       try {
-        const urlKMA = '[https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&models=kma_seamless&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&past_days=1](https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&models=kma_seamless&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&past_days=1)';
-        const urlBase = '[https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&hourly=precipitation_probability&daily=precipitation_probability_max&timezone=Asia%2FSeoul&past_days=1](https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&hourly=precipitation_probability&daily=precipitation_probability_max&timezone=Asia%2FSeoul&past_days=1)';
-        const urlAccu = '[https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&models=gfs_seamless&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul](https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&models=gfs_seamless&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul)';
+        // 1. 기본 안정형 API (어제 비교 + 7일 주간 예보 + 강수확률 완비)
+        const urlStandard = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&past_days=1';
+        
+        // 2. 글로벌 비교 모델 (GFS 모델)
+        const urlGlobal = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&models=gfs_seamless&current=temperature_2m,relative_humidity_2m,weather_code&hourly=precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul';
 
-        const [resKMA, resBase, resAccu] = await Promise.all([fetch(urlKMA), fetch(urlBase), fetch(urlAccu)]);
-        globalDataKMA = await resKMA.json();
-        globalDataBase = await resBase.json();
-        globalDataAccu = await resAccu.json();
+        const resStandard = await fetch(urlStandard);
+        if (!resStandard.ok) throw new Error('Standard API Error');
+        dataKMA = await resStandard.json();
 
-        updateUI(globalDataKMA, globalDataBase, globalDataAccu);
+        try {
+          const resGlobal = await fetch(urlGlobal);
+          if (resGlobal.ok) {
+            dataAccu = await resGlobal.json();
+          } else {
+            dataAccu = dataKMA;
+          }
+        } catch (e) {
+          dataAccu = dataKMA;
+        }
+
+        updateUI(dataKMA, dataAccu);
         renderWeeklyForecast(currentModel);
       } catch (err) {
-        document.getElementById('mainBriefing').innerText = '날씨 데이터를 불러오지 못했습니다. 네트워크를 확인해주세요.';
+        console.error(err);
+        document.getElementById('mainBriefing').innerText = '날씨 데이터를 불러오지 못했습니다. 우측 상단 새로고침을 눌러주세요.';
       }
     }
 
-    function updateUI(kma, base, accu) {
+    function updateUI(kma, accu) {
       const now = new Date();
       const currentHour = now.getHours();
 
-      // 오늘 00시~23시 데이터 배열 (past_days=1 이므로 24~47 인덱스)
-      const todayTemps = kma.hourly.temperature_2m.slice(24, 48).map(t => Math.round(t));
-      const todayRains = base.hourly.precipitation_probability.slice(24, 48);
+      // 오늘 00시~23시 데이터 배열 (past_days=1 기준 24~47번 인덱스)
+      const rawTodayTemps = kma.hourly.temperature_2m.slice(24, 48);
+      const todayTemps = rawTodayTemps.map(t => safeVal(t, 15));
+      const todayRains = kma.hourly.precipitation_probability.slice(24, 48).map(r => Number(r || 0));
       const todayCodes = kma.hourly.weather_code.slice(24, 48);
 
-      // 현재 수치
-      const kmaTemp = Math.round(kma.current.temperature_2m);
-      const kmaHum = kma.current.relative_humidity_2m;
+      // 기상청 현재 수치
+      const kmaTemp = safeVal(kma.current.temperature_2m, todayTemps[currentHour]);
+      const kmaHum = safeVal(kma.current.relative_humidity_2m, 60);
       const kmaCurrentRainProb = roundRainProb(todayRains[currentHour] || 0);
       const kmaWeather = getWeatherDesc(kma.current.weather_code, kmaCurrentRainProb);
 
-      const accuTemp = accu.current && accu.current.temperature_2m != null ? Math.round(accu.current.temperature_2m) : kmaTemp;
-      const accuHum = accu.current && accu.current.relative_humidity_2m != null ? accu.current.relative_humidity_2m : kmaHum;
-      const accuCurrentRainProb = (accu.hourly && accu.hourly.precipitation_probability) ? (accu.hourly.precipitation_probability[currentHour] || 0) : kmaCurrentRainProb;
-      const accuWeather = accu.current && accu.current.weather_code != null ? getWeatherDesc(accu.current.weather_code, accuCurrentRainProb) : kmaWeather;
+      // 아큐웨더(글로벌) 현재 수치
+      const accuTemp = (accu && accu.current && accu.current.temperature_2m != null) ? safeVal(accu.current.temperature_2m, kmaTemp) : kmaTemp;
+      const accuHum = (accu && accu.current && accu.current.relative_humidity_2m != null) ? safeVal(accu.current.relative_humidity_2m, kmaHum) : kmaHum;
+      const accuCurrentRainProb = (accu && accu.hourly && accu.hourly.precipitation_probability) ? Number(accu.hourly.precipitation_probability[currentHour] || 0) : (todayRains[currentHour] || 0);
+      const accuWeather = (accu && accu.current && accu.current.weather_code != null) ? getWeatherDesc(accu.current.weather_code, accuCurrentRainProb) : kmaWeather;
 
       // 1. 어제 동시간대 기온 비교
-      const yesterdayTemp = Math.round(kma.hourly.temperature_2m[currentHour]);
+      const yesterdayTemp = safeVal(kma.hourly.temperature_2m[currentHour], kmaTemp);
       const tempDiff = kmaTemp - yesterdayTemp;
       const diffAbs = Math.abs(tempDiff);
       const diffText = tempDiff === 0 ? '어제 이 시간과 기온이 같습니다.' : `어제보다 ${diffAbs}°C ${tempDiff > 0 ? '높습니다' : '낮습니다'}.`;
 
-      // 2. 일과 시간(08~18시) vs 일과 이후(18~24시) 정밀 분리 분석
+      // 2. 일과 시간(08~18시) vs 일과 이후(18~24시) 분석
       const workTemps = todayTemps.slice(8, 18);
       const afterTemps = todayTemps.slice(18, 24);
       const workMin = Math.min(...workTemps);
       const workMax = Math.max(...workTemps);
       const afterMin = Math.min(...afterTemps);
-      const afterAvg = Math.round(afterTemps.reduce((a, b) => a + b, 0) / afterTemps.length);
-      const dayNightGap = workMax - afterMin; // 낮 최고와 일과 이후 최저 기온 차
+      const dayNightGap = Math.max(0, workMax - afterMin);
 
       const workRainHours = [];
       const afterRainHours = [];
@@ -251,7 +271,7 @@
       document.getElementById('afterTempInfo').innerText = `${afterMin}°~${afterTemps[0]}° (낮보다 ${dayNightGap}°↓)`;
       document.getElementById('afterRainInfo').innerText = afterRainHours.length > 0 ? `☔ ${afterRainHours[0]}시 이후 비 예보` : '🌙 비 소식 없이 선선함';
 
-      // 일과 시간 vs 일과 이후 강수 종합 멘트 생성
+      // 일과 시간 vs 일과 이후 강수 종합 멘트
       let rainAnalysisText = '';
       if (workRainHours.length > 0 && afterRainHours.length > 0) {
         rainAnalysisText = `일과 시간(${workRainHours[0]}시~)부터 일과 이후 밤까지 비 예보가 이어지니 우산을 꼭 챙기세요!`;
@@ -263,7 +283,7 @@
         rainAnalysisText = `일과 시간과 일과 이후 모두 비 예보 없이 ${kmaWeather.desc} 날씨가 이어집니다.`;
       }
 
-      // 3. 시간대별(10시전 / 10~14시 / 14~17시 / 17시후) 맞춤 브리핑 적용
+      // 3. 시간대별(10시전 / 10~14시 / 14~17시 / 17시후) 맞춤 브리핑
       const pageTitleEl = document.getElementById('pageTitle');
       const briefingTagEl = document.getElementById('briefingTag');
       const mainBriefingEl = document.getElementById('mainBriefing');
@@ -272,41 +292,37 @@
       badgeContainerEl.innerHTML = '';
 
       if (currentHour < 10) {
-        // [오전 10시 이전] 출근·등교 멘트 포함
         pageTitleEl.innerText = '출근·등교 날씨 브리핑';
         briefingTagEl.innerText = 'MORNING BRIEFING';
         mainBriefingEl.innerText = `오늘은 출근·등교길입니다. ${rainAnalysisText}`;
         subBriefingEl.innerText = `현재 ${kmaTemp}°C로 ${diffText} 일과 시간엔 최고 ${workMax}°C까지 오르고, 일과 이후 저녁엔 ${afterMin}°C까지 내려가 기온 차가 ${dayNightGap}°C 나니 겉옷을 챙기세요.`;
 
       } else if (currentHour >= 10 && currentHour < 14) {
-        // [오전 10시 ~ 오후 2시] 출근 멘트 제외, 낮 온도 안내
         pageTitleEl.innerText = '낮 시간대 날씨 브리핑';
         briefingTagEl.innerText = 'DAYTIME BRIEFING';
         mainBriefingEl.innerText = `오늘 낮(일과 시간) 최고 기온은 ${workMax}°C이며, ${rainAnalysisText}`;
         subBriefingEl.innerText = `현재 ${kmaTemp}°C로 ${diffText} 일과 이후(18시~)에는 기온이 ${afterMin}°C까지 떨어져 낮과 기온 차가 ${dayNightGap}°C 벌어집니다.`;
 
       } else if (currentHour >= 14 && currentHour < 17) {
-        // [오후 2시 ~ 오후 5시] 현재 온도 및 저녁(일과 이후) 날씨 집중 안내
         pageTitleEl.innerText = '오후·저녁 날씨 브리핑';
         briefingTagEl.innerText = 'AFTERNOON & EVENING';
         const afterWeather = getWeatherDesc(todayCodes[19], todayRains[19]);
         mainBriefingEl.innerText = `지금 기온은 ${kmaTemp}°C(${kmaWeather.text})이며, 일과 이후 저녁엔 ${afterWeather.desc} 날씨와 함께 ${afterMin}°C로 내려갑니다.`;
-        subBriefingEl.innerText = `현재 ${diffText} ${afterRainHours.length > 0 ? '일과 이후 저녁 시간대 비 소식이 있으니 우산을 준비하세요.' : `일과 시간 대비 저녁 기온이 ${dayNightGap}°C가량 뚝 떨어지니 퇴근길 보온에 유의하세요.`}`;
+        subBriefingEl.innerText = `현재 ${diffText} ${afterRainHours.length > 0 ? '일과 이후 저녁 시간대 비 소식이 있으니 우산을 준비하세요.' : `일과 시간 대비 저녁 기온이 ${dayNightGap}°C가량 내려가니 퇴근길 보온에 유의하세요.`}`;
 
       } else {
-        // [오후 5시 이후] 일과 이후 밤 날씨 & 내일 예고
         pageTitleEl.innerText = '저녁·내일 날씨 브리핑';
         briefingTagEl.innerText = 'EVENING & TOMORROW';
-        const tomorrowMin = Math.round(kma.daily.temperature_2m_min[2]);
-        const tomorrowMax = Math.round(kma.daily.temperature_2m_max[2]);
-        const tomorrowRain = base.daily.precipitation_probability_max[2] || 0;
+        const tomorrowMin = safeVal(kma.daily.temperature_2m_min[2], 10);
+        const tomorrowMax = safeVal(kma.daily.temperature_2m_max[2], 20);
+        const tomorrowRain = Number(kma.daily.precipitation_probability_max[2] || 0);
         const tomorrowWeather = getWeatherDesc(kma.daily.weather_code[2], tomorrowRain);
 
         mainBriefingEl.innerText = `일과 이후 현재 기온은 ${kmaTemp}°C이며, 오늘 밤은 ${afterRainHours.length > 0 ? '비 소식이 있으니 우산을 챙기세요.' : `비 소식 없이 ${kmaWeather.desc} 밤 날씨가 이어집니다.`}`;
         subBriefingEl.innerText = `${diffText} 내일은 ${tomorrowWeather.desc} 날씨 속에 아침 최저 ${tomorrowMin}°C / 낮 최고 ${tomorrowMax}°C가 예상됩니다.`;
       }
 
-      // 뱃지 출력
+      // 배지 출력
       if (workRainHours.length > 0 || afterRainHours.length > 0) {
         badgeContainerEl.innerHTML += `<div class="badge badge-rain">☔ 강수 예보 (우산 준비!)</div>`;
       } else {
@@ -346,17 +362,18 @@
       container.innerHTML = '';
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
-      if (model === 'kma' && globalDataKMA && globalDataBase) {
+      if (model === 'kma' && dataKMA && dataKMA.daily) {
         for (let i = 1; i <= 7; i++) {
-          const dateObj = new Date(globalDataKMA.daily.time[i]);
+          if (!dataKMA.daily.time[i]) continue;
+          const dateObj = new Date(dataKMA.daily.time[i]);
           const dayName = dayNames[dateObj.getDay()];
           const label = i === 1 ? '오늘' : `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${dayName})`;
-          const rawRain = globalDataBase.daily.precipitation_probability_max[i] || 0;
+          const rawRain = dataKMA.daily.precipitation_probability_max[i] || 0;
           const rain = roundRainProb(rawRain);
-          const wCode = globalDataKMA.daily.weather_code[i];
+          const wCode = dataKMA.daily.weather_code[i];
           const weather = getWeatherDesc(wCode, rain);
-          const maxT = Math.round(globalDataKMA.daily.temperature_2m_max[i]);
-          const minT = Math.round(globalDataKMA.daily.temperature_2m_min[i]);
+          const maxT = safeVal(dataKMA.daily.temperature_2m_max[i], 20);
+          const minT = safeVal(dataKMA.daily.temperature_2m_min[i], 10);
 
           container.innerHTML += `
             <div class="weekly-row">
@@ -367,22 +384,25 @@
             </div>
           `;
         }
-      } else if (model === 'accu' && globalDataAccu) {
-        for (let i = 0; i < 7; i++) {
-          const dateObj = new Date(globalDataAccu.daily.time[i]);
+      } else if (model === 'accu' && dataAccu && dataAccu.daily) {
+        // past_days 유무에 따라 시작 인덱스 자동 맞춤
+        const startIdx = dataAccu.daily.time.length > 7 ? 1 : 0;
+        for (let i = startIdx; i < startIdx + 7; i++) {
+          if (!dataAccu.daily.time[i]) continue;
+          const dateObj = new Date(dataAccu.daily.time[i]);
           const dayName = dayNames[dateObj.getDay()];
-          const label = i === 0 ? '오늘' : `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${dayName})`;
-          const rain = (globalDataAccu.daily.precipitation_probability_max && globalDataAccu.daily.precipitation_probability_max[i] != null) 
-                       ? globalDataAccu.daily.precipitation_probability_max[i] 
+          const label = i === startIdx ? '오늘' : `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${dayName})`;
+          const rain = (dataAccu.daily.precipitation_probability_max && dataAccu.daily.precipitation_probability_max[i] != null) 
+                       ? Number(dataAccu.daily.precipitation_probability_max[i]) 
                        : 0;
-          const wCode = globalDataAccu.daily.weather_code[i];
+          const wCode = dataAccu.daily.weather_code[i];
           const weather = getWeatherDesc(wCode, rain);
-          const maxT = Math.round(globalDataAccu.daily.temperature_2m_max[i]);
-          const minT = Math.round(globalDataAccu.daily.temperature_2m_min[i]);
+          const maxT = safeVal(dataAccu.daily.temperature_2m_max[i], 20);
+          const minT = safeVal(dataAccu.daily.temperature_2m_min[i], 10);
 
           container.innerHTML += `
             <div class="weekly-row">
-              <div class="day-col ${i === 0 ? 'today' : ''}">${label}</div>
+              <div class="day-col ${i === startIdx ? 'today' : ''}">${label}</div>
               <div class="icon-col">${weather.icon}</div>
               <div class="rain-col">${rain > 0 ? rain + '%' : '0%'}</div>
               <div class="temp-range-col"><span class="min-temp">${minT}°</span> / <strong>${maxT}°</strong></div>
