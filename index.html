@@ -27,25 +27,25 @@
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .title-group h1 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
     
-    /* 지역 선택 드롭다운 스타일 */
+    /* 심플 위치 선택 (서울 / 현재 내 위치 2가지만) */
     .location-wrapper { display: inline-flex; align-items: center; margin-top: 3px; position: relative; }
     .location-select {
       appearance: none;
       -webkit-appearance: none;
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #cbd5e1;
-      font-size: 0.78rem;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-sub);
+      font-size: 0.82rem;
       font-weight: 600;
-      padding: 3px 22px 3px 8px;
+      padding: 2px 18px 2px 0;
       border-radius: 6px;
       cursor: pointer;
       outline: none;
     }
-    .location-select:focus { border-color: var(--accent-blue); color: #fff; }
+    .location-select:focus { color: #fff; }
     .select-arrow {
       position: absolute;
-      right: 7px;
+      right: 4px;
       font-size: 0.65rem;
       color: var(--text-sub);
       pointer-events: none;
@@ -133,22 +133,8 @@
       <h1 id="pageTitle">실시간 날씨 브리핑</h1>
       <div class="location-wrapper">
         <select id="locationSelect" class="location-select" onchange="handleLocationChange()">
-          <option value="37.5665,126.9780">📍 서울</option>
+          <option value="seoul">📍 서울</option>
           <option value="gps" id="gpsOption">🎯 현재 내 위치 (GPS)</option>
-          <option value="37.8949,127.2003">📍 경기 포천</option>
-          <option value="37.2983,127.6375">📍 경기 여주</option>
-          <option value="37.2636,127.0286">📍 수원·화성</option>
-          <option value="37.5340,126.6534">📍 인천 청라</option>
-          <option value="37.6891,127.8806">📍 강원 홍천</option>
-          <option value="37.7519,128.8760">📍 강원 강릉</option>
-          <option value="37.1326,128.1910">📍 충북 제천</option>
-          <option value="36.3504,127.3845">📍 대전</option>
-          <option value="35.8562,129.2247">📍 경북 경주</option>
-          <option value="35.8714,128.6014">📍 대구</option>
-          <option value="35.1595,126.8526">📍 광주광역시</option>
-          <option value="34.7604,127.6622">📍 전남 여수</option>
-          <option value="35.1796,129.0756">📍 부산</option>
-          <option value="33.4996,126.5312">📍 제주</option>
         </select>
         <span class="select-arrow">▾</span>
       </div>
@@ -214,48 +200,49 @@
     let currentLat = 37.5665;
     let currentLon = 126.9780;
 
-    // 지역 변경 핸들러
+    // 서울 기본값 vs 현재 내 위치(GPS) 선택 핸들러
     function handleLocationChange() {
       const sel = document.getElementById('locationSelect');
-      const val = sel.value;
+      const gpsOpt = document.getElementById('gpsOption');
 
-      if (val === 'gps') {
+      if (sel.value === 'gps') {
         if (!navigator.geolocation) {
           alert('이 기기에서 위치 기능을 사용할 수 없습니다.');
-          sel.value = '37.5665,126.9780';
+          sel.value = 'seoul';
           return;
         }
-        const gpsOpt = document.getElementById('gpsOption');
         gpsOpt.innerText = '🎯 위치 확인 중...';
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
-            currentLat = pos.coords.latitude.toFixed(4);
-            currentLon = pos.coords.longitude.toFixed(4);
+            currentLat = Number(pos.coords.latitude.toFixed(4));
+            currentLon = Number(pos.coords.longitude.toFixed(4));
             try {
               const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&accept-language=ko`);
               const geoData = await geoRes.json();
               const addr = geoData.address || {};
-              const cityName = addr.city || addr.county || addr.borough || addr.town || addr.province || '현위치';
-              gpsOpt.innerText = `🎯 ${cityName} (GPS)`;
+              const city = addr.city || addr.province || '';
+              const district = addr.borough || addr.county || addr.town || addr.village || '';
+              const locName = `${city} ${district}`.trim() || '현재 내 위치';
+              gpsOpt.innerText = `🎯 ${locName}`;
             } catch (e) {
-              gpsOpt.innerText = '🎯 현위치 (GPS)';
+              gpsOpt.innerText = '🎯 현재 내 위치';
             }
             fetchWeatherData(true);
           },
           (err) => {
-            alert('위치 권한이 거부되었거나 신호를 잡을 수 없어 서울 날씨로 표시합니다.');
+            alert('위치 권한이 꺼져 있거나 신호를 잡을 수 없어 서울 날씨로 유지합니다.');
             gpsOpt.innerText = '🎯 현재 내 위치 (GPS)';
-            sel.value = '37.5665,126.9780';
+            sel.value = 'seoul';
             currentLat = 37.5665;
             currentLon = 126.9780;
             fetchWeatherData(true);
           },
-          { timeout: 8000 }
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
         );
       } else {
-        const parts = val.split(',');
-        currentLat = parseFloat(parts[0]);
-        currentLon = parseFloat(parts[1]);
+        currentLat = 37.5665;
+        currentLon = 126.9780;
+        gpsOpt.innerText = '🎯 현재 내 위치 (GPS)';
         fetchWeatherData(true);
       }
     }
@@ -303,6 +290,15 @@
     async function fetchWeatherData(isManual = false) {
       const btn = document.getElementById('refreshBtn');
       if (isManual && btn) btn.innerText = '갱신 중...';
+
+      // 새로고침 시 현재 내 위치 모드가 선택되어 있다면 위치도 다시 갱신
+      const sel = document.getElementById('locationSelect');
+      if (isManual && sel && sel.value === 'gps' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          currentLat = Number(pos.coords.latitude.toFixed(4));
+          currentLon = Number(pos.coords.longitude.toFixed(4));
+        });
+      }
 
       try {
         const cacheBust = `&_t=${Date.now()}`;
