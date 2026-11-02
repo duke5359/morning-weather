@@ -27,7 +27,6 @@
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .title-group h1 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
     
-    /* 심플 위치 선택 (서울 / 현재 내 위치 2가지만) */
     .location-wrapper { display: inline-flex; align-items: center; margin-top: 3px; position: relative; }
     .location-select {
       appearance: none;
@@ -150,7 +149,7 @@
     <div class="badges" id="badgeContainer"></div>
   </div>
 
-  <!-- 슬림형 2분할 비교 카드 (오전/오후 기온 및 강수확률) -->
+  <!-- 슬림형 2분할 비교 카드 -->
   <div class="comparison-grid">
     <div class="agency-card kma">
       <div class="agency-name">대한민국 기상청</div>
@@ -200,7 +199,29 @@
     let currentLat = 37.5665;
     let currentLon = 126.9780;
 
-    // 서울 기본값 vs 현재 내 위치(GPS) 선택 핸들러
+    // 대한민국 법정 공휴일 체크 함수 (양력 기준 고정 공휴일 + 주말 판별)
+    function isHolidayOrWeekend(dateObj) {
+      const day = dateObj.getDay();
+      if (day === 0 || day === 6) return true; // 일요일(0), 토요일(6)
+
+      const m = dateObj.getMonth() + 1;
+      const d = dateObj.getDate();
+
+      // 고정 법정 공휴일 (월/일)
+      const holidays = [
+        "1-1",   // 신정
+        "3-1",   // 삼일절
+        "5-5",   // 어린이날
+        "6-6",   // 현충일
+        "8-15",  // 광복절
+        "10-3",  // 개천절
+        "10-9",  // 한글날
+        "12-25"  // 성탄절
+      ];
+
+      return holidays.includes(`${m}-${d}`);
+    }
+
     function handleLocationChange() {
       const sel = document.getElementById('locationSelect');
       const gpsOpt = document.getElementById('gpsOption');
@@ -291,7 +312,6 @@
       const btn = document.getElementById('refreshBtn');
       if (isManual && btn) btn.innerText = '갱신 중...';
 
-      // 새로고침 시 현재 내 위치 모드가 선택되어 있다면 위치도 다시 갱신
       const sel = document.getElementById('locationSelect');
       if (isManual && sel && sel.value === 'gps' && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -329,6 +349,7 @@
     function updateUI(kma, accu) {
       const now = new Date();
       const currentHour = now.getHours();
+      const isOffDay = isHolidayOrWeekend(now); // 주말 또는 공휴일 여부 판별
 
       const todayTemps = kma.hourly.temperature_2m.slice(24, 48).map(t => safeVal(t, 15));
       const todayRains = kma.hourly.precipitation_probability.slice(24, 48).map(r => Number(r || 0));
@@ -393,12 +414,23 @@
           : `현재 ${diffText}, 오늘 낮 최고 기온은 ${todayMax}°C까지 오릅니다.`;
 
       } else if (currentHour >= 6 && currentHour < 10) {
-        pageTitleEl.innerText = '출근·등교 날씨 브리핑';
-        briefingTagEl.innerText = 'MORNING BRIEFING';
-        if (hasRain) {
-          mainBriefingEl.innerText = `☔ 우산이 필요한 출근·등교길입니다. ${rainHours[0]}시~${rainHours[rainHours.length-1]+1}시경 비 예보가 있습니다.`;
+        // [아침 시간대: 평일 vs 주말/공휴일 분기]
+        if (isOffDay) {
+          pageTitleEl.innerText = '주말·휴일 아침 날씨 브리핑';
+          briefingTagEl.innerText = 'MORNING BRIEFING';
+          if (hasRain) {
+            mainBriefingEl.innerText = `☔ 비 소식이 있는 여유로운 주말 아침입니다. ${rainHours[0]}시~${rainHours[rainHours.length-1]+1}시경 비 예보가 있습니다.`;
+          } else {
+            mainBriefingEl.innerText = `${kmaWeather.short} 포근하고 여유로운 주말 아침입니다. 비 소식 없이 무난합니다.`;
+          }
         } else {
-          mainBriefingEl.innerText = `${kmaWeather.short} ${getMorningFeel(kmaTemp)} 출근·등교길입니다. 오늘 비 소식 없이 무난합니다.`;
+          pageTitleEl.innerText = '출근·등교 날씨 브리핑';
+          briefingTagEl.innerText = 'MORNING BRIEFING';
+          if (hasRain) {
+            mainBriefingEl.innerText = `☔ 우산이 필요한 출근·등교길입니다. ${rainHours[0]}시~${rainHours[rainHours.length-1]+1}시경 비 예보가 있습니다.`;
+          } else {
+            mainBriefingEl.innerText = `${kmaWeather.short} ${getMorningFeel(kmaTemp)} 출근·등교길입니다. 오늘 비 소식 없이 무난합니다.`;
+          }
         }
         subBriefingEl.innerText = `현재 ${kmaTemp}°C로 ${diffText}, 낮 최고 ${todayMax}°C까지 오릅니다.`;
 
@@ -413,7 +445,7 @@
         briefingTagEl.innerText = 'AFTERNOON & EVENING';
         const eveWeather = getWeatherDesc(todayCodes[19], todayRains[19], todayClouds[19]);
         mainBriefingEl.innerText = `지금은 ${kmaTemp}°C(${kmaWeather.text})이며, 저녁엔 ${eveWeather.text}(${eveningTemp}°C) 날씨가 예상됩니다.`;
-        subBriefingEl.innerText = `현재 ${diffText}, 퇴근길 기온이 내려가니 가벼운 겉옷을 챙기세요.`;
+        subBriefingEl.innerText = `현재 ${diffText}, 외출 후 귀가 시 기온이 내려가니 가벼운 겉옷을 챙기세요.`;
 
       } else {
         pageTitleEl.innerText = '저녁·내일 날씨 브리핑';
