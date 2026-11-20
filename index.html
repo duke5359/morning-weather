@@ -491,4 +491,64 @@
     function renderWeeklyForecast(model) {
       const container = document.getElementById('weeklyForecast');
       if (!container) return;
-      container
+      container.innerHTML = '';
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+      const targetData = (model === 'kma') ? dataKMA : dataAccu;
+      if (!targetData || !targetData.daily) return;
+
+      const isKma = (model === 'kma');
+      const startIdx = (targetData.daily.time && targetData.daily.time.length > 8) ? 1 : 0;
+
+      for (let i = startIdx; i < startIdx + 7; i++) {
+        if (!targetData.daily.time[i]) continue;
+        const dateObj = new Date(targetData.daily.time[i]);
+        const dayIdx = dateObj.getDay();
+        const dayName = dayNames[dayIdx];
+        const dateStr = `${dateObj.getMonth() + 1}.${dateObj.getDate()}.`;
+
+        let titleLabel = dayName;
+        if (i === startIdx) titleLabel = '오늘';
+        else if (i === startIdx + 1) titleLabel = '내일';
+
+        const titleClass = i === startIdx ? 'today' : (dayIdx === 0 ? 'sun' : '');
+
+        const ampm = getAmPmData(
+          targetData.hourly.precipitation_probability || [],
+          targetData.hourly.weather_code || [],
+          targetData.hourly.cloud_cover || [],
+          i,
+          isKma
+        );
+
+        const maxT = safeVal(targetData.daily.temperature_2m_max[i], 20);
+        const minT = safeVal(targetData.daily.temperature_2m_min[i], 10);
+
+        container.innerHTML += `
+          <div class="weekly-row">
+            <div class="day-col">
+              <div class="day-title ${titleClass}">${titleLabel}</div>
+              <div class="day-date">${dateStr}</div>
+            </div>
+            <div class="ampm-col">
+              <div class="half-day am">
+                <span class="rain-prob ${ampm.amRain === 0 ? 'zero' : ''}">${ampm.amRain}%</span>
+                <span class="half-icon">${ampm.amIcon}</span>
+              </div>
+              <div class="half-day pm">
+                <span class="half-icon">${ampm.pmIcon}</span>
+                <span class="rain-prob ${ampm.pmRain === 0 ? 'zero' : ''}">${ampm.pmRain}%</span>
+              </div>
+            </div>
+            <div class="temp-range-col">
+              <span class="min-temp">${minT}°</span><span class="temp-slash">/</span><span class="max-temp">${maxT}°</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    fetchWeatherData();
+  </script>
+</body>
+</html>
