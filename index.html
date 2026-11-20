@@ -141,7 +141,7 @@
   <div class="briefing-card">
     <div class="briefing-tag" id="briefingTag">TODAY'S BRIEFING</div>
     <div class="briefing-text" id="mainBriefing">날씨 정보를 불러오는 중입니다...</div>
-    <div class="briefing-sub" id="subBriefing">잠시만 기다려주세요.</div>
+    <div class="briefing-sub" id="subBriefing">서버에 연결하고 있습니다.</div>
     <div class="badges" id="badgeContainer"></div>
   </div>
 
@@ -187,6 +187,11 @@
   </div>
 
   <script>
+    window.onerror = function(msg) {
+      var sub = document.getElementById('subBriefing');
+      if (sub) sub.innerText = '오류 발생: ' + msg;
+    };
+
     let dataKMA = null;
     let dataAccu = null;
     let currentModel = 'kma';
@@ -230,7 +235,7 @@
             }
             fetchWeatherData(true);
           },
-          (err) => {
+          () => {
             alert('위치 권한이 거부되어 서울 날씨로 표시합니다.');
             gpsOpt.innerText = '🎯 현재 내 위치 (GPS)';
             sel.value = 'seoul';
@@ -287,31 +292,50 @@
       return (val !== null && val !== undefined && !isNaN(val)) ? Math.round(Number(val)) : fallback;
     }
 
+    async function fetchWithTimeout(url, ms = 8000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timer);
+        return res;
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
+    }
+
     async function fetchWeatherData(isManual = false) {
       const btn = document.getElementById('refreshBtn');
+      const sub = document.getElementById('subBriefing');
       if (isManual && btn) btn.innerText = '갱신 중...';
+      if (sub) sub.innerText = '날씨 데이터를 받아오는 중입니다...';
 
       try {
         const urlStandard = `https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current=temperature_2m,precipitation,weather_code,cloud_cover&hourly=temperature_2m,precipitation_probability,weather_code,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&past_days=1&forecast_days=8`;
         const urlGlobal = `https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&models=gfs_seamless&current=temperature_2m,weather_code,cloud_cover&hourly=temperature_2m,precipitation_probability,weather_code,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=8`;
 
-        const resStandard = await fetch(urlStandard);
-        if (!resStandard.ok) throw new Error(`서버 응답 오류 (${resStandard.status})`);
-        dataKMA = await resStandard.json();
+        const [resStandard, resGlobal] = await Promise.allSettled([
+          fetchWithTimeout(urlStandard, 8000),
+          fetchWithTimeout(urlGlobal, 8000)
+        ]);
 
-        try {
-          const resGlobal = await fetch(urlGlobal);
-          dataAccu = resGlobal.ok ? await resGlobal.json() : dataKMA;
-        } catch (e) {
+        if (resStandard.status !== 'fulfilled' || !resStandard.value.ok) {
+          throw new Error('기상청 서버 응답 없음');
+        }
+        dataKMA = await resStandard.value.json();
+
+        if (resGlobal.status === 'fulfilled' && resGlobal.value.ok) {
+          dataAccu = await resGlobal.value.json();
+        } else {
           dataAccu = dataKMA;
         }
 
         updateUI(dataKMA, dataAccu);
         renderWeeklyForecast(currentModel);
       } catch (err) {
-        console.error(err);
         document.getElementById('mainBriefing').innerText = '날씨 서버 연결이 지연되고 있습니다.';
-        document.getElementById('subBriefing').innerText = `잠시 후 새로고침을 눌러주세요. (${err.message})`;
+        document.getElementById('subBriefing').innerText = `새로고침을 눌러주세요. (${err.name === 'AbortError' ? '응답 시간 초과' : err.message})`;
       } finally {
         if (btn) {
           setTimeout(() => { btn.innerText = '새로고침'; }, 300);
@@ -450,7 +474,7 @@
         document.getElementById('accuPmTemp').innerText = `${accuPmTemp}°`;
         document.getElementById('accuRain').innerText = `${accuCurrentRainProb}%`;
       } catch (e) {
-        console.error("UI Update Error:", e);
+        document.getElementById('subBriefing').innerText = '화면 표시 오류: ' + e.message;
       }
     }
 
